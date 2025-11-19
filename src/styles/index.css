@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globales ligeros */
+body {
+  @apply bg-slate-50 text-slate-900;
+}
+
+.app-gradient {
+  @apply bg-gradient-to-br from-indigo-500 via-purple-500 to-sky-400;
+}
