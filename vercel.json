@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "version": 2,
   "builds": [
     {
@@ -15,4 +16,11 @@
       "dest": "/index.html"
     }
   ]
+=======
+  "build": {
+    "env": {
+      "NODE_VERSION": "18"
+    }
+  }
+>>>>>>> 7edc912eb716b41f89e346c5f1285fd1cb1682c5
 }

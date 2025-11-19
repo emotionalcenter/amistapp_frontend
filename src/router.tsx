@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
@@ -18,3 +19,22 @@ const AppRouter: React.FC = () => {
 };
 
 export default AppRouter;
+=======
+import { createBrowserRouter } from "react-router-dom";
+import App from "./App";
+import Home from "./pages/Home";
+import Auth from "./pages/Auth";
+
+const router = createBrowserRouter([
+  {
+    path:"/",
+    element:<App />,
+    children:[
+      { index:true, element:<Home /> },
+      { path:"login", element:<Auth /> }
+    ]
+  }
+]);
+
+export default router;
+>>>>>>> 7edc912eb716b41f89e346c5f1285fd1cb1682c5

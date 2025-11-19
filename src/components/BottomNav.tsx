@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React from "react";
 import { NavLink } from "react-router-dom";
 
@@ -48,3 +49,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ active }) => {
 };
 
 export default BottomNav;
+=======
+export default function BottomNav(){
+ return <div className='w-full p-4 bg-white shadow fixed bottom-0'>Menu</div>;
+}
+>>>>>>> 7edc912eb716b41f89e346c5f1285fd1cb1682c5
