@@ -1,0 +1,118 @@
+/* ========================
+   CONTENEDOR GENERAL
+========================= */
+.landing-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+/* ========================
+   HEADER CON GRADIENTE
+========================= */
+.landing-header {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #a855f7, #3b82f6);
+  color: white;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
+}
+
+.landing-logo {
+  width: 90px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.landing-title {
+  margin-top: 0;
+  font-size: 2.4rem;
+  font-weight: bold;
+}
+
+.landing-box {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 20px;
+  border-radius: 20px;
+  margin-top: 15px;
+  backdrop-filter: blur(5px);
+}
+
+/* ========================
+   OPCIONES PRINCIPALES
+========================= */
+.landing-options {
+  margin-top: 20px;
+  padding: 20px;
+}
+
+.option-card {
+  background: #fff;
+  padding: 15px 18px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.option-card:hover {
+  transform: scale(1.02);
+}
+
+.emoji {
+  font-size: 2rem;
+  margin-right: 12px;
+}
+
+.arrow {
+  margin-left: auto;
+  font-size: 2rem;
+  color: #888;
+}
+
+/* ========================
+   CARRUSEL ESTILO DUOLINGO
+========================= */
+.carousel-section {
+  padding: 25px;
+}
+
+.carousel-section h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* Contenedor de scroll horizontal */
+.duo-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 18px;
+  padding: 15px 5px;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Quita la barra en Firefox */
+}
+
+.duo-carousel::-webkit-scrollbar {
+  display: none; /* Quita la barra en Chrome */
+}
+
+/* Cada item estilo Duolingo */
+.duo-item {
+  min-width: 260px;
+  padding: 20px;
+  background: #eef4ff;
+  border-radius: 18px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.25s;
+}
+
+.duo-item:hover {
+  transform: scale(1.05);
+}

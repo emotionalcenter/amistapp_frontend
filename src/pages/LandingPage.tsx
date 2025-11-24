@@ -1,148 +1,96 @@
-import React from "react";
+// src/pages/LandingPage.tsx
+import React, { useEffect, useRef } from "react";
+import logo from "../assets/logo.png";
+import "../styles/Landing.css";
 import { useNavigate } from "react-router-dom";
-import HeroHeader from "../components/HeroHeader";
-import FeatureCard from "../components/FeatureCard";
-import BottomNav from "../components/BottomNav";
 
-const LandingPage: React.FC = () => {
+export default function LandingPage() {
   const navigate = useNavigate();
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+
+  // Autoscroll tipo Duolingo muy simple
+  useEffect(() => {
+    const container = carouselRef.current;
+    if (!container) return;
+
+    const interval = setInterval(() => {
+      if (!container) return;
+      const scrollAmount = 270; // más o menos el ancho de una tarjeta
+      const maxScroll = container.scrollWidth - container.clientWidth;
+
+      if (container.scrollLeft + scrollAmount >= maxScroll) {
+        container.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        container.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <HeroHeader />
+    <div className="landing-container">
+      {/* HEADER */}
+      <div className="landing-header">
+        <img src={logo} alt="AmistApp Logo" className="landing-logo" />
+        <h1 className="landing-title">AmistApp</h1>
 
-      <main className="mx-auto flex max-w-md flex-col gap-6 px-5 pt-6">
-        {/* Botones de rol */}
-        <section className="space-y-3">
-          <button
-            type="button"
-            onClick={() => navigate("/estudiante")}
-            className="flex w-full items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-100 text-lg">
-                🎓
-              </span>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-slate-900">
-                  Soy Estudiante
-                </p>
-                <p className="text-xs text-slate-500">
-                  Accede a tu espacio de aprendizaje.
-                </p>
-              </div>
-            </div>
-            <span className="text-xl text-slate-300">›</span>
-          </button>
+        <div className="landing-box">
+          <h2>Fortaleciendo lazos, desarrollando educación socioemocional</h2>
+          <p>
+            Construye un ambiente positivo en tu aula mediante el refuerzo del comportamiento positivo y el seguimiento emocional.
+          </p>
+        </div>
+      </div>
 
-          <button
-            type="button"
-            onClick={() => navigate("/docente")}
-            className="flex w-full items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-100 text-lg">
-                🍎
-              </span>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-slate-900">
-                  Soy Docente
-                </p>
-                <p className="text-xs text-slate-500">
-                  Gestiona tu clase y estudiantes.
-                </p>
-              </div>
-            </div>
-            <span className="text-xl text-slate-300">›</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate("/tutor")}
-            className="flex w-full items-center justify-between rounded-2xl bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-lg">
-                👨‍👩‍👧
-              </span>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-slate-900">
-                  Soy Tutor
-                </p>
-                <p className="text-xs text-slate-500">
-                  Acompaña el desarrollo de tus hijos.
-                </p>
-              </div>
-            </div>
-            <span className="text-xl text-slate-300">›</span>
-          </button>
-        </section>
-
-        {/* Novedades / carrusel simple */}
-        <section className="space-y-3">
-          <h2 className="text-base font-semibold text-slate-900">
-            Novedades y Características
-          </h2>
-          <div className="flex gap-4 overflow-x-auto pb-1">
-            <article className="min-w-[70%] rounded-3xl bg-white shadow-sm">
-              <div className="h-28 rounded-3xl bg-slate-200" />
-              <div className="space-y-1 p-3">
-                <p className="text-sm font-semibold text-slate-900">
-                  Refuerzo Positivo
-                </p>
-                <p className="text-xs text-slate-500">
-                  Convierte tu aula en un espacio de motivación.
-                </p>
-              </div>
-            </article>
-
-            <article className="min-w-[70%] rounded-3xl bg-white shadow-sm">
-              <div className="h-28 rounded-3xl bg-slate-200" />
-              <div className="space-y-1 p-3">
-                <p className="text-sm font-semibold text-slate-900">
-                  Monitoreo en tiempo real
-                </p>
-                <p className="text-xs text-slate-500">
-                  Sigue el progreso socioemocional de tus estudiantes.
-                </p>
-              </div>
-            </article>
+      {/* OPCIONES PRINCIPALES */}
+      <div className="landing-options">
+        <div className="option-card" onClick={() => navigate("/student")}>
+          <span className="emoji">🎓</span>
+          <div>
+            <h3>Soy Estudiante</h3>
+            <p>Accede a tu espacio de aprendizaje.</p>
           </div>
-        </section>
+          <span className="arrow">›</span>
+        </div>
 
-        {/* Características */}
-        <section className="space-y-3 pb-4">
-          <h2 className="text-base font-semibold text-slate-900">
-            Características
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <FeatureCard
-              icon="💗"
-              title="Seguimiento Emocional"
-              description="Monitorea el bienestar de los estudiantes."
-            />
-            <FeatureCard
-              icon="🎓"
-              title="Sistema de Puntos"
-              description="Refuerza el comportamiento positivo."
-            />
-            <FeatureCard
-              icon="🛡️"
-              title="Reportes Anónimos"
-              description="Canal seguro de comunicación."
-            />
-            <FeatureCard
-              icon="🎁"
-              title="Premios Personalizados"
-              description="Catálogo adaptable a tu escuela."
-            />
+        <div
+          className="option-card"
+          onClick={() => navigate("/teacher/register")}
+        >
+          <span className="emoji">🍎</span>
+          <div>
+            <h3>Soy Docente</h3>
+            <p>Gestiona tu clase y estudiantes.</p>
           </div>
-        </section>
-      </main>
+          <span className="arrow">›</span>
+        </div>
 
-      <BottomNav active="inicio" />
+        <div className="option-card" onClick={() => navigate("/tutor")}>
+          <span className="emoji">👨‍👩‍👧‍👦</span>
+          <div>
+            <h3>Soy Tutor</h3>
+            <p>Acompaña el desarrollo de tus hijos.</p>
+          </div>
+          <span className="arrow">›</span>
+        </div>
+      </div>
+
+      {/* CARRUSEL */}
+      <div className="carousel-section">
+        <h2>Novedades y Características</h2>
+
+        <div className="carousel" ref={carouselRef}>
+          <div className="carousel-item">🌟 Seguimiento emocional diario</div>
+          <div className="carousel-item">🎁 Sistema de premios y logros</div>
+          <div className="carousel-item">
+            📊 Reportes automáticos para docentes
+          </div>
+          <div className="carousel-item">
+            🤝 Conexión estudiantes–familias–profesores
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default LandingPage;
+}

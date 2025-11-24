@@ -49,3 +49,13 @@ const TeacherHome: React.FC = () => {
 };
 
 export default TeacherHome;
+import BottomNav from "../components/BottomNav";
+
+export default function TeacherHome() {
+  return (
+    <div className="pb-20">
+      {/* contenido */}
+      <BottomNav />
+    </div>
+  );
+}
