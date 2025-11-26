@@ -1,146 +1,96 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { useNavigate } from "react-router-dom";
 
 export default function TeacherRegister() {
-  const navigate = useNavigate();
-
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
     subject: "",
     course: "",
     email: "",
     phone: "",
     password: "",
+    terms: false,
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, type, value, checked } = e.target;
+    setForm({
+      ...form,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
-  function handleChange(e: any) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  function generateTeacherCode() {
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `PROFE-${random}`;
-  }
-
-  // Registro tradicional
-  async function handleSubmit(e: any) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
 
-    if (form.password.length < 6) {
-      setError("La contraseña debe tener mínimo 6 caracteres.");
-      setLoading(false);
+    if (!form.terms) {
+      alert("Debes aceptar los términos y condiciones para registrarte.");
       return;
     }
 
-    const hasLetters = /[A-Za-z]/.test(form.password);
-    const hasNumbers = /[0-9]/.test(form.password);
-
-    if (!hasLetters || !hasNumbers) {
-      setError("La contraseña debe incluir letras y números.");
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
     });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+    if (authError) return alert(authError.message);
 
-    const teacherCode = generateTeacherCode();
+    const userId = authData.user?.id;
 
-    const { error: insertError } = await supabase.from("teachers").insert([
-      {
-        id: data.user?.id,
-        first_name: form.firstName,
-        last_name: form.lastName,
-        subject: form.subject,
-        course: form.course,
-        email: form.email,
-        phone: form.phone,
-        teacher_code: teacherCode,
-      },
-    ]);
-
-    if (insertError) {
-      setError(insertError.message);
-      setLoading(false);
-      return;
-    }
-
-    alert("Registro exitoso. Revisa tu correo para confirmar tu cuenta.");
-    navigate("/");
-  }
-
-  // Registro con Google
-  async function handleGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: "http://localhost:5173/",
-      },
+    await supabase.from("teachers_v2").insert({
+      first_name: form.first_name,
+      last_name: form.last_name,
+      subject: form.subject,
+      course: form.course,
+      email: form.email,
+      phone: form.phone,
+      accepted_terms: form.terms,
+      user_id: userId,
+      teacher_code: crypto.randomUUID().slice(0, 8),
     });
 
-    if (error) setError(error.message);
-  }
+    alert("Registro exitoso. Revisa tu correo para activar tu cuenta.");
+  };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-purple-600 to-blue-500 p-6">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white w-full max-w-md p-6 rounded-xl shadow-xl space-y-4"
-      >
-        <h2 className="text-2xl font-bold text-center text-purple-700">
-          Registro Docente
-        </h2>
+    <div className="p-6 max-w-lg mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Registro de Profesor</h1>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          name="firstName"
+          name="first_name"
           placeholder="Nombre"
+          className="w-full p-2 border rounded"
           onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
           required
         />
 
         <input
           type="text"
-          name="lastName"
+          name="last_name"
           placeholder="Apellido"
+          className="w-full p-2 border rounded"
           onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
           required
         />
 
         <input
           type="text"
           name="subject"
-          placeholder="Asignatura que imparte"
+          placeholder="Asignatura"
+          className="w-full p-2 border rounded"
           onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
           required
         />
 
         <input
           type="text"
           name="course"
-          placeholder="Curso (ej. 6°A, 3°B)"
+          placeholder="Curso"
+          className="w-full p-2 border rounded"
           onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
           required
         />
 
@@ -148,41 +98,51 @@ export default function TeacherRegister() {
           type="email"
           name="email"
           placeholder="Correo electrónico"
+          className="w-full p-2 border rounded"
           onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
           required
         />
 
         <input
-          type="text"
+          type="tel"
           name="phone"
           placeholder="Teléfono"
+          className="w-full p-2 border rounded"
           onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
         />
 
         <input
           type="password"
           name="password"
           placeholder="Contraseña"
+          className="w-full p-2 border rounded"
           onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
           required
+          minLength={6}
         />
 
-        <button
-          disabled={loading}
-          className="bg-purple-600 text-white w-full p-3 rounded-lg font-semibold hover:bg-purple-700 transition"
-        >
-          {loading ? "Registrando..." : "Registrarme"}
-        </button>
+        {/* CHECKBOX DE TÉRMINOS */}
+        <label className="flex items-center space-x-2 text-sm">
+          <input
+            type="checkbox"
+            name="terms"
+            checked={form.terms}
+            onChange={handleChange}
+            className="w-4 h-4"
+          />
+          <span>
+            Acepto los{" "}
+            <a href="/terminos" className="text-blue-500 underline">
+              Términos y Condiciones
+            </a>
+          </span>
+        </label>
 
         <button
-          type="button"
-          onClick={handleGoogle}
-          className="bg-red-500 text-white w-full p-3 rounded-lg font-semibold hover:bg-red-600 transition"
+          type="submit"
+          className="bg-purple-600 text-white px-4 py-2 rounded w-full"
         >
-          Registrarme con Google
+          Registrarme
         </button>
       </form>
     </div>
