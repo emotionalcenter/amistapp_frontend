@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos globales opcionales */
 body {
   @apply bg-gray-100;
-  font-family: Arial, sans-serif;
 }

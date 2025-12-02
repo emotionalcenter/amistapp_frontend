@@ -56,7 +56,7 @@ export default function LandingPage() {
 
         <div
           className="option-card"
-          onClick={() => navigate("/teacher/register")}
+          onClick={() => navigate("/register/teacher")}
         >
           <span className="emoji">🍎</span>
           <div>

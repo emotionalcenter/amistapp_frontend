@@ -1,26 +1,81 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import { useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-export default function ProtectedRoute({ children }: any) {
-  const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
+/* Páginas públicas */
+import UserSelect from "./pages/UserSelect";
+import TeacherLogin from "./pages/TeacherLoginPage";
+import TeacherRegister from "./pages/TeacherRegisterPage";
+import TeacherSuccess from "./pages/TeacherSuccess";
 
-  useEffect(() => {
-    async function verify() {
-      const { data } = await supabase.auth.getSession();
+/* Nuevo ProtectRoute */
+import ProtectedRoute from "./components/ProtectedRoute";
 
-      if (!data.session) {
-        navigate("/login");
-      } else {
-        setChecking(false);
-      }
-    }
+/* Panel del profesor */
+import TeacherDashboard from "./pages/TeacherDashboard";  // 🔥 Nuevo Dashboard REAL
+import TeacherProfile from "./pages/TeacherProfile";
+import TeacherEmotions from "./pages/TeacherEmotions";
+import TeacherRewards from "./pages/TeacherRewards";
+import TeacherReports from "./pages/TeacherReports";
 
-    verify();
-  }, []);
+export default function AppRouter() {
+  return (
+    <BrowserRouter>
+      <Routes>
 
-  if (checking) return <p>Cargando...</p>;
+        {/* Pantalla inicial */}
+        <Route path="/" element={<UserSelect />} />
 
-  return children;
+        {/* Autenticación */}
+        <Route path="/login" element={<TeacherLogin />} />
+        <Route path="/register/teacher" element={<TeacherRegister />} />
+        <Route path="/teacher/success" element={<TeacherSuccess />} />
+
+        {/* Panel del profesor — TODAS protegidas */}
+        <Route
+          path="/teacher/home"
+          element={
+            <ProtectedRoute>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/profile"
+          element={
+            <ProtectedRoute>
+              <TeacherProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/emotions"
+          element={
+            <ProtectedRoute>
+              <TeacherEmotions />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/rewards"
+          element={
+            <ProtectedRoute>
+              <TeacherRewards />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/reports"
+          element={
+            <ProtectedRoute>
+              <TeacherReports />
+            </ProtectedRoute>
+          }
+        />
+
+      </Routes>
+    </BrowserRouter>
+  );
 }

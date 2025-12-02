@@ -5,7 +5,7 @@ import BottomNav from "./components/BottomNav";
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-100">
-      <main className="pb-20">
+      <main className="pt-20 pb-20">
         <Outlet />
       </main>
       <BottomNav />
