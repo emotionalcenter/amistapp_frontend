@@ -6,8 +6,11 @@ import TeacherLogin from "./pages/TeacherLoginPage";
 import TeacherRegister from "./pages/TeacherRegisterPage";
 import TeacherSuccess from "./pages/TeacherSuccess";
 
-/* Páginas del panel docente */
-import TeacherHome from "./pages/TeacherHome";
+/* Nuevo ProtectRoute */
+import ProtectedRoute from "./components/ProtectedRoute";
+
+/* Panel del profesor */
+import TeacherDashboard from "./pages/TeacherDashboard";  // 🔥 Nuevo Dashboard REAL
 import TeacherProfile from "./pages/TeacherProfile";
 import TeacherEmotions from "./pages/TeacherEmotions";
 import TeacherRewards from "./pages/TeacherRewards";
@@ -26,12 +29,51 @@ export default function AppRouter() {
         <Route path="/register/teacher" element={<TeacherRegister />} />
         <Route path="/teacher/success" element={<TeacherSuccess />} />
 
-        {/* Panel del profesor */}
-        <Route path="/teacher/home" element={<TeacherHome />} />
-        <Route path="/teacher/profile" element={<TeacherProfile />} />
-        <Route path="/teacher/emotions" element={<TeacherEmotions />} />
-        <Route path="/teacher/rewards" element={<TeacherRewards />} />
-        <Route path="/teacher/reports" element={<TeacherReports />} />
+        {/* Panel del profesor — TODAS protegidas */}
+        <Route
+          path="/teacher/home"
+          element={
+            <ProtectedRoute>
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/profile"
+          element={
+            <ProtectedRoute>
+              <TeacherProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/emotions"
+          element={
+            <ProtectedRoute>
+              <TeacherEmotions />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/rewards"
+          element={
+            <ProtectedRoute>
+              <TeacherRewards />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/reports"
+          element={
+            <ProtectedRoute>
+              <TeacherReports />
+            </ProtectedRoute>
+          }
+        />
 
       </Routes>
     </BrowserRouter>

@@ -19,34 +19,27 @@ export default function TeacherRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Manejo de entradas
   function handleChange(e: any) {
     const { name, type, value, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
   }
 
-  // Generar código único de profesor
   function generateTeacherCode() {
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `PROFE-${random}`;
   }
 
-  // -------------------------
-  // 🔹 REGISTRO NORMAL
-  // -------------------------
   async function handleSubmit(e: any) {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Validación de términos
     if (!form.terms) {
       setError("Debes aceptar los términos y condiciones.");
       setLoading(false);
       return;
     }
 
-    // Validación de contraseña
     if (form.password.length < 6) {
       setError("La contraseña debe tener mínimo 6 caracteres.");
       setLoading(false);
@@ -62,13 +55,10 @@ export default function TeacherRegister() {
       return;
     }
 
-    // 1️⃣ Crear usuario en Supabase Auth
+    // 1️⃣ Crear usuario en supabase (ya queda logueado porque desactivamos confirmación)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
     });
 
     if (authError) {
@@ -80,9 +70,9 @@ export default function TeacherRegister() {
     const userId = authData.user?.id;
     const teacherCode = generateTeacherCode();
 
-    // 2️⃣ Insertar perfil en teachers_v2
+    // 2️⃣ Insertar perfil del profesor
     const { error: insertError } = await supabase.from("teachers_v2").insert({
-      id: userId,
+      user_id: userId,
       first_name: form.firstName,
       last_name: form.lastName,
       subject: form.subject,
@@ -90,9 +80,9 @@ export default function TeacherRegister() {
       email: form.email,
       phone: form.phone,
       teacher_code: teacherCode,
-      accepted_terms: form.terms,
-      user_id: userId,
       full_name: `${form.firstName} ${form.lastName}`,
+      points_available: 1000, // 👈 puntos iniciales
+      accepted_terms: form.terms,
     });
 
     if (insertError) {
@@ -101,15 +91,11 @@ export default function TeacherRegister() {
       return;
     }
 
-    // 3️⃣ Redirigir para mostrar el código
     navigate("/teacher/success", {
       state: { teacherCode },
     });
   }
 
-  // -------------------------
-  // 🔹 LOGIN / REGISTRO GOOGLE
-  // -------------------------
   async function handleGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -133,89 +119,29 @@ export default function TeacherRegister() {
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        <input
-          type="text"
-          name="firstName"
-          placeholder="Nombre"
-          onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
-          required
-        />
+        <input type="text" name="firstName" placeholder="Nombre" onChange={handleChange} required className="w-full p-3 border rounded-lg" />
 
-        <input
-          type="text"
-          name="lastName"
-          placeholder="Apellido"
-          onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
-          required
-        />
+        <input type="text" name="lastName" placeholder="Apellido" onChange={handleChange} required className="w-full p-3 border rounded-lg" />
 
-        <input
-          type="text"
-          name="subject"
-          placeholder="Asignatura que imparte"
-          onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
-          required
-        />
+        <input type="text" name="subject" placeholder="Asignatura que imparte" onChange={handleChange} required className="w-full p-3 border rounded-lg" />
 
-        <input
-          type="text"
-          name="course"
-          placeholder="Curso (ej. 6°A, 3°B)"
-          onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
-          required
-        />
+        <input type="text" name="course" placeholder="Curso (ej. 6°A, 3°B)" onChange={handleChange} required className="w-full p-3 border rounded-lg" />
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Correo electrónico"
-          onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
-          required
-        />
+        <input type="email" name="email" placeholder="Correo electrónico" onChange={handleChange} required className="w-full p-3 border rounded-lg" />
 
-        <input
-          type="text"
-          name="phone"
-          placeholder="Teléfono"
-          onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
-        />
+        <input type="text" name="phone" placeholder="Teléfono" onChange={handleChange} className="w-full p-3 border rounded-lg" />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Contraseña"
-          onChange={handleChange}
-          className="w-full p-3 border rounded-lg"
-          required
-        />
+        <input type="password" name="password" placeholder="Contraseña" onChange={handleChange} required className="w-full p-3 border rounded-lg" />
 
-        {/* Checkbox */}
         <label className="flex items-center space-x-2 text-sm">
-          <input
-            type="checkbox"
-            name="terms"
-            checked={form.terms}
-            onChange={handleChange}
-            className="w-4 h-4"
-          />
+          <input type="checkbox" name="terms" checked={form.terms} onChange={handleChange} className="w-4 h-4" />
           <span>
             Acepto los{" "}
-            <a href="/terminos" className="text-blue-500 underline">
-              Términos y Condiciones
-            </a>
+            <a href="/terminos" className="text-blue-500 underline">Términos y Condiciones</a>
           </span>
         </label>
 
-        <button
-          disabled={loading}
-          className="bg-purple-600 text-white w-full p-3 rounded-lg font-semibold hover:bg-purple-700 transition"
-        >
+        <button disabled={loading} className="bg-purple-600 text-white w-full p-3 rounded-lg font-semibold hover:bg-purple-700 transition">
           {loading ? "Registrando..." : "Registrarme"}
         </button>
 
