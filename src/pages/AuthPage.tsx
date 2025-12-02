@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
-import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const role = location.state?.role || "teacher";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,29 +24,26 @@ export default function AuthPage() {
     setLoading(false);
 
     if (error) {
-      setError(error.message);
+      setError("Correo o contraseña incorrectos.");
       return;
     }
 
-    // Redirección según rol
-    if (data.user?.user_metadata?.role === "teacher") {
-      navigate("/teacher");
-    } else if (data.user?.user_metadata?.role === "student") {
-      navigate("/student");
-    } else {
-      navigate("/");
-    }
+    navigate(`/${role}/dashboard`);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <h1 className="text-2xl font-bold mb-6">Ingresar a AmistApp</h1>
+    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-purple-600 to-blue-500 p-6">
+      <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-xl space-y-4">
+        <h2 className="text-2xl font-bold text-center text-purple-700">
+          Iniciar Sesión
+        </h2>
 
-      <div className="w-full max-w-sm space-y-4">
+        {error && <p className="text-red-500">{error}</p>}
+
         <input
           type="email"
-          placeholder="Correo"
-          className="w-full p-3 border rounded"
+          placeholder="Correo electrónico"
+          className="w-full p-3 border rounded-lg"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -51,20 +51,28 @@ export default function AuthPage() {
         <input
           type="password"
           placeholder="Contraseña"
-          className="w-full p-3 border rounded"
+          className="w-full p-3 border rounded-lg"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded"
+          className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition"
         >
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
+
+        <p className="text-center text-sm">
+          ¿No tienes cuenta?{" "}
+          <span
+            className="text-blue-600 underline cursor-pointer"
+            onClick={() => navigate(`/register/${role}`, { state: { role } })}
+          >
+            Registrarme
+          </span>
+        </p>
       </div>
     </div>
   );

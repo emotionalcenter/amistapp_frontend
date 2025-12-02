@@ -131,7 +131,7 @@ export default function UserSelect() {
         </div>
       </motion.div>
 
-      {/* Mascota kawai */}
+      {/* Mascota kawaii */}
       <motion.div
         className="mt-6 flex flex-col items-center"
         initial={{ opacity: 0, scale: 0.8 }}
@@ -153,9 +153,11 @@ export default function UserSelect() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        {/* Botón Estudiante */}
+
+        {/* ESTUDIANTE */}
         <Link
-          to="/register/student"
+          to="/auth/choice"
+          state={{ role: "student" }}
           className="flex items-center gap-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl p-4 shadow-lg hover:shadow-xl transition mb-4"
         >
           <span className="text-3xl">🎒</span>
@@ -167,9 +169,10 @@ export default function UserSelect() {
           </div>
         </Link>
 
-        {/* Botón Profesor */}
+        {/* PROFESOR */}
         <Link
-          to="/register/teacher"
+          to="/login"
+          state={{ role: "teacher" }}
           className="flex items-center gap-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl transition mb-4"
         >
           <span className="text-3xl">📘</span>
@@ -181,9 +184,10 @@ export default function UserSelect() {
           </div>
         </Link>
 
-        {/* Botón Tutor */}
+        {/* TUTOR */}
         <Link
-          to="/register/tutor"
+          to="/auth/choice"
+          state={{ role: "tutor" }}
           className="flex items-center gap-4 bg-gradient-to-r from-teal-500 to-blue-500 text-white rounded-xl p-4 shadow-lg hover:shadow-xl transition"
         >
           <span className="text-3xl">👨‍👩‍👧</span>
