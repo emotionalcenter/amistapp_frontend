@@ -1,35 +1,33 @@
 import BottomNav from "../components/BottomNav";
 import { useNavigate } from "react-router-dom";
+import mascot from "../assets/mascot.png"; // Asegúrate de que existe la imagen
 
 export default function TeacherHome() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-24">
-
-      {/* Header */}
-      <header className="bg-purple-600 text-white p-6 shadow-lg rounded-b-3xl">
-        <h1 className="text-3xl font-extrabold">👩‍🏫 Panel Docente</h1>
-        <p className="text-sm opacity-90 mt-1">Bienvenido a tu espacio educativo AmistApp</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-blue-500 pb-24">
+      
+      {/* HEADER */}
+      <header className="p-6 text-white">
+        <h1 className="text-3xl font-bold">¡Bienvenido, Profe! 👋</h1>
       </header>
 
-      {/* Contenido */}
-      <main className="p-6 space-y-8">
+      <main className="p-5 space-y-6">
 
-        {/* Sección de Información */}
-        <section className="bg-white shadow-md p-6 rounded-2xl border border-purple-100">
-          <h2 className="text-xl font-bold text-purple-600 mb-4">Tu información</h2>
-
-          <p className="mb-1"><strong>Asignatura:</strong> Educación Socioemocional</p>
-          <p className="mb-1"><strong>Curso:</strong> Primero Medio</p>
+        {/* 🔵 TARJETA DE INFORMACIÓN */}
+        <section className="bg-white shadow-xl p-6 rounded-2xl">
+          <h2 className="text-xl font-bold text-purple-600">Tu información</h2>
+          <p><strong>Asignatura:</strong> Educación Socioemocional</p>
+          <p><strong>Curso:</strong> Primero Medio</p>
 
           <div className="mt-4">
             <strong>Código Profesor:</strong>
-            <p className="text-purple-700 text-2xl font-extrabold">PROFE-XXXXXX</p>
+            <p className="text-purple-700 text-2xl font-extrabold">PROFE-XXXXXXX</p>
 
             <button
-              className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
-              onClick={() => navigator.clipboard.writeText("PROFE-XXXXXX")}
+              className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-lg"
+              onClick={() => navigator.clipboard.writeText("PROFE-XXXXXXX")}
             >
               Copiar código
             </button>
@@ -41,54 +39,51 @@ export default function TeacherHome() {
           </div>
         </section>
 
-        {/* BOTÓN DAR PUNTAJE */}
+        {/* 🟣 MASCOTA MOTIVACIONAL */}
+        <section className="flex flex-col items-center">
+          <img
+            src={mascot}
+            alt="Mascota AmistApp"
+            className="w-40 h-40 animate-bounce"
+          />
+          <p className="text-center text-white text-lg mt-3 font-semibold px-6">
+            ¡Recuerda entregar puntos positivos hoy!  
+            Cada reconocimiento mejora la convivencia educativa  
+            y motiva a tus estudiantes a desarrollar habilidades socioemocionales. 💜
+          </p>
+        </section>
+
+        {/* 🎁 BOTÓN DAR PUNTAJE */}
         <button
           onClick={() => navigate("/teacher/give-points/students")}
-          className="w-full bg-purple-600 text-white py-4 rounded-2xl text-xl font-bold shadow-lg hover:bg-purple-700 transition"
+          className="w-full bg-purple-700 text-white py-4 rounded-xl text-xl font-bold shadow-lg hover:bg-purple-800 transition"
         >
           🎁 Dar Puntaje
         </button>
 
-        {/* Atajos */}
+        {/* 🟡 ATAJOS */}
         <section className="grid grid-cols-2 gap-4">
 
-          {/* Estudiantes */}
-          <div
-            className="p-5 bg-purple-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-purple-200 transition"
-            onClick={() => navigate("/teacher/profile")}
-          >
-            <p className="text-purple-700 font-bold">Mis Estudiantes</p>
+          <div className="p-4 bg-purple-100 rounded-xl text-center shadow-md">
+            <p className="text-purple-600 font-bold">Mis Estudiantes</p>
           </div>
 
-          {/* Puntajes */}
-          <div
-            className="p-5 bg-blue-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-blue-200 transition"
-            onClick={() => navigate("/teacher/rewards")}
-          >
-            <p className="text-blue-700 font-bold">Puntajes</p>
+          <div className="p-4 bg-blue-100 rounded-xl text-center shadow-md">
+            <p className="text-blue-600 font-bold">Puntajes</p>
           </div>
 
-          {/* Emociones */}
-          <div
-            className="p-5 bg-green-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-green-200 transition"
-            onClick={() => navigate("/teacher/emotions")}
-          >
-            <p className="text-green-700 font-bold">Emociones</p>
+          <div className="p-4 bg-green-100 rounded-xl text-center shadow-md">
+            <p className="text-green-600 font-bold">Emociones</p>
           </div>
 
-          {/* Reportes */}
-          <div
-            className="p-5 bg-yellow-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-yellow-200 transition"
-            onClick={() => navigate("/teacher/reports")}
-          >
-            <p className="text-yellow-700 font-bold">Reportes</p>
+          <div className="p-4 bg-yellow-100 rounded-xl text-center shadow-md">
+            <p className="text-yellow-600 font-bold">Reportes</p>
           </div>
 
         </section>
-
       </main>
 
-      {/* Navegación inferior */}
+      {/* 🔻 Navegación inferior */}
       <BottomNav />
     </div>
   );
