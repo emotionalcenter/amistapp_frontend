@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }: any) {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     async function verify() {
@@ -13,14 +14,16 @@ export default function ProtectedRoute({ children }: any) {
       if (!data.session) {
         navigate("/login");
       } else {
-        setChecking(false);
+        setSession(data.session);
+        setLoading(false);
       }
     }
 
     verify();
   }, []);
 
-  if (checking) return <p>Cargando...</p>;
+  if (loading) return <p>Cargando...</p>;
 
+  // Pasamos la sesión como prop interna
   return children;
 }

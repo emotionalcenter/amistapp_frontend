@@ -8,41 +8,58 @@ export default function GivePointsStudents() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
+    async function load() {
+      // 1. Obtener sesión
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
 
-      const { data, error } = await supabase
+      // 2. Obtener teacher.id
+      const { data: teacher } = await supabase
+        .from("teachers_v2")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      // 3. Obtener estudiantes asociados
+      const { data: studentsData } = await supabase
         .from("students")
         .select("*")
-        .order("name", { ascending: true });
+        .eq("teacher_id", teacher.id)
+        .order("name");
 
-      if (!error && data) setStudents(data);
+      setStudents(studentsData || []);
       setLoading(false);
-    };
+    }
 
     load();
   }, []);
 
-  if (loading)
-    return <div className="p-6 text-center text-purple-700 font-bold">Cargando estudiantes...</div>;
+  if (loading) return <p className="p-4">Cargando estudiantes...</p>;
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold text-purple-700 mb-6">Selecciona un estudiante</h1>
+    <div className="p-6 space-y-4 bg-gray-100 min-h-screen">
+      <h1 className="text-2xl font-bold text-purple-700">Selecciona un estudiante</h1>
 
-      <div className="space-y-4">
-        {students.map((s) => (
+      {students.length === 0 && (
+        <p className="text-gray-600">Aún no tienes estudiantes registrados.</p>
+      )}
+
+      <div className="space-y-3">
+        {students.map(student => (
           <div
-            key={s.id}
+            key={student.id}
             onClick={() =>
               navigate("/teacher/give-points/actions", {
-                state: { studentId: s.id, studentName: s.name, classroom: s.classroom },
+                state: {
+                  studentId: student.id,
+                  studentName: student.name,
+                },
               })
             }
-            className="p-4 bg-white shadow-md rounded-xl cursor-pointer hover:bg-purple-100"
+            className="bg-white p-4 rounded-xl shadow cursor-pointer hover:bg-purple-100 transition"
           >
-            <p className="text-lg font-semibold">{s.name}</p>
-            <p className="text-gray-500 text-sm">Curso: {s.classroom}</p>
+            <p className="font-bold">{student.name}</p>
+            <p className="text-sm text-gray-500">{student.email}</p>
           </div>
         ))}
       </div>

@@ -16,6 +16,9 @@ import TeacherReports from "./pages/TeacherReports";
 import GivePointsStudents from "./pages/GivePointsStudents";
 import GivePointsActions from "./pages/GivePointsActions";
 
+/* 📌 NUEVA PANTALLA: Lista de estudiantes */
+import TeacherStudents from "./pages/TeacherStudents";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -69,6 +72,16 @@ export default function AppRouter() {
           element={
             <ProtectedRoute>
               <TeacherReports />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 🆕 MIS ESTUDIANTES */}
+        <Route
+          path="/teacher/students"
+          element={
+            <ProtectedRoute>
+              <TeacherStudents />
             </ProtectedRoute>
           }
         />

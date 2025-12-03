@@ -1,90 +1,107 @@
-import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function GivePointsActions() {
-  const location = useLocation();
   const navigate = useNavigate();
-
-  const { studentId, studentName, classroom } = location.state || {};
+  const location = useLocation();
+  const { studentId, studentName } = location.state;
 
   const [actions, setActions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
-  // Cargar acciones desde actions_catalog
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-
-      const { data, error } = await supabase
+    async function loadActions() {
+      const { data } = await supabase
         .from("actions_catalog")
         .select("*")
         .order("points", { ascending: false });
 
-      if (!error && data) setActions(data);
-
+      setActions(data || []);
       setLoading(false);
-    };
-
-    load();
-  }, []);
-
-  const givePoints = async (action: any) => {
-    // 1. Registrar en points_log
-    await supabase.from("points_log").insert({
-      student_id: studentId,
-      action: action.name,
-      points: action.points,
-      created_at: new Date(),
-    });
-
-    // 2. Notificar al estudiante
-    await supabase.from("notifications").insert({
-      student_id: studentId,
-      message: `🎉 ¡Recibiste ${action.points} puntos por: ${action.name}!`,
-    });
-
-    // 3. Notificar a sus compañeros del mismo curso
-    const { data: classmates } = await supabase
-      .from("students")
-      .select("id")
-      .eq("classroom", classroom)
-      .neq("id", studentId);
-
-    if (classmates && classmates.length > 0) {
-      const messages = classmates.map((c) => ({
-        student_id: c.id,
-        message: `📣 ${studentName} fue premiado con ${action.points} puntos por: ${action.name}`,
-      }));
-
-      await supabase.from("notifications").insert(messages);
     }
 
-    // 4. Volver al Home
-    navigate("/teacher/home");
-  };
+    loadActions();
+  }, []);
 
-  if (loading)
-    return <div className="p-6 text-center text-purple-700 font-bold">Cargando acciones...</div>;
+  async function givePoints(action: any) {
+    setSending(true);
+
+    // 1. Obtener sesión
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+
+    // 2. Obtener teacher.id y puntos disponibles
+    const { data: teacher } = await supabase
+      .from("teachers_v2")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (teacher.points_available < action.points) {
+      alert("No tienes suficientes puntos.");
+      setSending(false);
+      return;
+    }
+
+    // 3. Crear registro en tabla points
+    await supabase.from("points").insert({
+      student_id: studentId,
+      teacher_id: teacher.id,
+      points: action.points,
+      reason: action.name,
+    });
+
+    // 4. Sumar puntos al estudiante
+    await supabase.rpc("increment_student_points", {
+      student_id_input: studentId,
+      points_input: action.points,
+    });
+
+    // 5. Descontar puntos al profesor
+    await supabase.rpc("decrement_teacher_points", {
+      teacher_id_input: teacher.id,
+      points_input: action.points,
+    });
+
+    // 6. Crear notificación
+    await supabase.from("notifications").insert({
+      teacher_id: teacher.id,
+      student_id: studentId,
+      message: `${studentName} fue premiado por: ${action.name}`,
+      course: teacher.course,
+    });
+
+    setSending(false);
+    navigate("/teacher/home");
+  }
+
+  if (loading) return <p className="p-5">Cargando acciones...</p>;
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold text-purple-700">
-        ¿Qué acción realizó {studentName}?
+    <div className="p-6 bg-gray-100 min-h-screen space-y-4">
+      <h1 className="text-2xl font-bold text-purple-700 mb-4">
+        Selecciona una acción para: {studentName}
       </h1>
 
-      <div className="mt-6 space-y-4">
-        {actions.map((a) => (
-          <div
-            key={a.id}
-            onClick={() => givePoints(a)}
-            className="p-4 bg-purple-100 cursor-pointer rounded-xl shadow hover:bg-purple-200"
-          >
-            <p className="text-lg font-semibold">{a.name}</p>
-            <p className="text-purple-600 font-bold">{a.points} pts</p>
-          </div>
-        ))}
-      </div>
+      {actions.map(action => (
+        <div
+          key={action.id}
+          onClick={() => givePoints(action)}
+          className="bg-white p-4 rounded-xl shadow cursor-pointer hover:bg-purple-100"
+        >
+          <p className="font-bold">{action.name}</p>
+          <p className="text-sm text-gray-600">{action.description}</p>
+          <p className="text-purple-600 font-bold mt-2">
+            +{action.points} puntos
+          </p>
+        </div>
+      ))}
+
+      {sending && (
+        <p className="text-center text-purple-700 font-bold">Enviando...</p>
+      )}
     </div>
   );
 }
