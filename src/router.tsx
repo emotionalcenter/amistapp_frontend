@@ -1,21 +1,18 @@
-// src/router.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+// PUBLIC PAGES
 import UserSelect from "./pages/UserSelect";
-
-// AUTH PROFESOR
 import TeacherLogin from "./pages/TeacherLoginPage";
 import TeacherRegister from "./pages/TeacherRegisterPage";
 import TeacherSuccess from "./pages/TeacherSuccess";
 
-// AUTH ESTUDIANTE (a futuro)
-import StudentRegister from "./pages/StudentRegister";
 import StudentLogin from "./pages/StudentLogin";
+import StudentRegister from "./pages/StudentRegister";
 
-// PROTECCIÓN
+// PROTECTED ROUTE
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// PROFESOR
+// TEACHER PAGES
 import TeacherHome from "./pages/TeacherHome";
 import TeacherProfile from "./pages/TeacherProfile";
 import TeacherEmotions from "./pages/TeacherEmotions";
@@ -23,36 +20,44 @@ import TeacherRewards from "./pages/TeacherRewards";
 import TeacherReports from "./pages/TeacherReports";
 import TeacherStudents from "./pages/TeacherStudents";
 
-import GivePointsStudents from "./pages/GivePointsStudents";
+// TEACHER GIVE POINTS FLOW (Acción → Estudiante)
 import GivePointsActions from "./pages/GivePointsActions";
+import GivePointsStudents from "./pages/GivePointsStudents";
 
-// ESTUDIANTE
+// STUDENT PAGES
 import StudentHome from "./pages/StudentHome";
 import StudentProfile from "./pages/StudentProfile";
 import StudentEmotions from "./pages/StudentEmotions";
 import StudentRewards from "./pages/StudentRewards";
 import StudentReports from "./pages/StudentReports";
+
+// STUDENT GIVE POINTS FLOW (Acción → Estudiante)
 import StudentGivePoints from "./pages/StudentGivePoints";
-import StudentRewardHistory from "./pages/StudentRewardHistory";
+
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* 🔓 RUTAS PÚBLICAS */}
-        <Route path="/" element={<UserSelect />} />
+        {/* ----------------------- */}
+        {/*        PUBLIC ROUTES    */}
+        {/* ----------------------- */}
 
-        {/* LOGIN PROFESOR */}
+        <Route path="/" element={<UserSelect />} />
         <Route path="/login" element={<TeacherLogin />} />
         <Route path="/register/teacher" element={<TeacherRegister />} />
         <Route path="/teacher/success" element={<TeacherSuccess />} />
 
-        {/* LOGIN ESTUDIANTE */}
-        <Route path="/register/student" element={<StudentRegister />} />
-        <Route path="/student/login" element={<StudentLogin />} />
+        {/* 🔥 LOGIN ESTUDIANTE */}
+        <Route path="/login/student" element={<StudentLogin />} />
+        <Route path="/student/register" element={<StudentRegister />} />
 
-        {/* 🔒 PROFESOR (solo logueado) */}
+
+        {/* ----------------------- */}
+        {/*     TEACHER PRIVATE     */}
+        {/* ----------------------- */}
+
         <Route
           path="/teacher/home"
           element={
@@ -61,6 +66,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teacher/profile"
           element={
@@ -69,6 +75,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teacher/emotions"
           element={
@@ -77,6 +84,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teacher/rewards"
           element={
@@ -85,6 +93,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teacher/reports"
           element={
@@ -93,6 +102,8 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        {/* LISTA DE ESTUDIANTES */}
         <Route
           path="/teacher/students"
           element={
@@ -102,7 +113,7 @@ export default function AppRouter() {
           }
         />
 
-        {/* DAR PUNTAJE PROFESOR */}
+        {/* DAR PUNTOS PROFESOR – 1) Acción → 2) Estudiante */}
         <Route
           path="/teacher/give-points/actions"
           element={
@@ -111,6 +122,7 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/teacher/give-points/students"
           element={
@@ -120,59 +132,61 @@ export default function AppRouter() {
           }
         />
 
-        {/* 🔒 ESTUDIANTE */}
+
+        {/* ----------------------- */}
+        {/*     STUDENT PRIVATE     */}
+        {/* ----------------------- */}
+
         <Route
           path="/student/home"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute userType="student">
               <StudentHome />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/student/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute userType="student">
               <StudentProfile />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/student/emotions"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute userType="student">
               <StudentEmotions />
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/student/rewards"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute userType="student">
               <StudentRewards />
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/student/rewards/history"
-          element={
-            <ProtectedRoute>
-              <StudentRewardHistory />
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/student/reports"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute userType="student">
               <StudentReports />
             </ProtectedRoute>
           }
         />
+
+        {/* DAR PUNTOS ESTUDIANTE – 1) Acción → 2) Compañero */}
         <Route
           path="/student/give-points"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute userType="student">
               <StudentGivePoints />
             </ProtectedRoute>
           }
