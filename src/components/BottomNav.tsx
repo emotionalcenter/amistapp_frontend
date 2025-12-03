@@ -1,46 +1,13 @@
-import { Home, User, Heart, Award, Flag } from "lucide-react";
 import { Link } from "react-router-dom";
 
-interface BottomNavProps {
-  active?: string;
-}
-
-export default function BottomNav({ active }: BottomNavProps) {
-  const baseStyle = "flex flex-col items-center text-xs";
-  const inactive = "text-gray-500";
-  const activeStyle = "text-purple-600 font-semibold";
-
+export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white shadow-lg flex justify-around py-2 z-50 border-t border-gray-200">
-      {/* INICIO */}
-      <Link to="/teacher/home" className={baseStyle}>
-        <Home size={24} className={active === "home" ? activeStyle : inactive} />
-        <span className={active === "home" ? activeStyle : inactive}>Inicio</span>
-      </Link>
-
-      {/* PERFIL */}
-      <Link to="/teacher/profile" className={baseStyle}>
-        <User size={24} className={active === "profile" ? activeStyle : inactive} />
-        <span className={active === "profile" ? activeStyle : inactive}>Perfil</span>
-      </Link>
-
-      {/* EMOCIONES */}
-      <Link to="/teacher/emotions" className={baseStyle}>
-        <Heart size={24} className={active === "emotions" ? activeStyle : inactive} />
-        <span className={active === "emotions" ? activeStyle : inactive}>Emociones</span>
-      </Link>
-
-      {/* PREMIOS */}
-      <Link to="/teacher/rewards" className={baseStyle}>
-        <Award size={24} className={active === "rewards" ? activeStyle : inactive} />
-        <span className={active === "rewards" ? activeStyle : inactive}>Premios</span>
-      </Link>
-
-      {/* REPORTES */}
-      <Link to="/teacher/reports" className={baseStyle}>
-        <Flag size={24} className={active === "reports" ? activeStyle : inactive} />
-        <span className={active === "reports" ? activeStyle : inactive}>Reportes</span>
-      </Link>
+    <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t flex justify-around p-3 z-50">
+      <Link to="/teacher/home" className="text-purple-600 font-bold">Inicio</Link>
+      <Link to="/teacher/emotions" className="text-purple-600 font-bold">Emociones</Link>
+      <Link to="/teacher/rewards" className="text-purple-600 font-bold">Premios</Link>
+      <Link to="/teacher/reports" className="text-purple-600 font-bold">Reportes</Link>
+      <Link to="/teacher/profile" className="text-purple-600 font-bold">Perfil</Link>
     </nav>
   );
 }
