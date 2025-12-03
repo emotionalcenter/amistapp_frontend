@@ -1,87 +1,95 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import mascot from "../assets/mascot.png"; // asegúrate de tener este archivo
+import BottomNav from "../components/BottomNav";
+import { useNavigate } from "react-router-dom";
 
 export default function TeacherHome() {
-  const [teacher, setTeacher] = useState<any>(null);
-
-  useEffect(() => {
-    async function loadTeacher() {
-      // 1. Obtener sesión del usuario
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-
-      if (!userId) return;
-
-      // 2. Obtener su perfil
-      const { data, error } = await supabase
-        .from("teachers_v2")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (!error) setTeacher(data);
-    }
-
-    loadTeacher();
-  }, []);
-
-  if (!teacher) return <p>Cargando perfil...</p>;
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 p-6 text-white">
+    <div className="min-h-screen bg-gray-100 pb-24">
 
-      {/* ENCABEZADO */}
-      <h1 className="text-3xl font-bold mb-4">
-        Hola, {teacher.full_name} 👋
-      </h1>
+      {/* Header */}
+      <header className="bg-purple-600 text-white p-6 shadow-lg rounded-b-3xl">
+        <h1 className="text-3xl font-extrabold">👩‍🏫 Panel Docente</h1>
+        <p className="text-sm opacity-90 mt-1">Bienvenido a tu espacio educativo AmistApp</p>
+      </header>
 
-      {/* TARJETA DE INFORMACIÓN */}
-      <div className="bg-white text-gray-800 p-6 rounded-2xl shadow-xl space-y-3">
+      {/* Contenido */}
+      <main className="p-6 space-y-8">
 
-        <p className="text-lg">
-          <strong>Código Profesor:</strong>{" "}
-          <span className="text-purple-700 font-mono">{teacher.teacher_code}</span>
-        </p>
+        {/* Sección de Información */}
+        <section className="bg-white shadow-md p-6 rounded-2xl border border-purple-100">
+          <h2 className="text-xl font-bold text-purple-600 mb-4">Tu información</h2>
 
-        <p className="text-lg">
-          <strong>Puntos disponibles:</strong>{" "}
-          <span className="text-green-600 text-2xl">
-            {teacher.points_available}
-          </span>
-        </p>
+          <p className="mb-1"><strong>Asignatura:</strong> Educación Socioemocional</p>
+          <p className="mb-1"><strong>Curso:</strong> Primero Medio</p>
 
-        <p className="text-md text-gray-500 italic">
-          (Estos son los puntos que tienes para premiar semanalmente a tu curso)
-        </p>
+          <div className="mt-4">
+            <strong>Código Profesor:</strong>
+            <p className="text-purple-700 text-2xl font-extrabold">PROFE-XXXXXX</p>
 
-      </div>
+            <button
+              className="mt-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+              onClick={() => navigator.clipboard.writeText("PROFE-XXXXXX")}
+            >
+              Copiar código
+            </button>
+          </div>
 
-      {/* MASCOTA MOTIVADORA */}
-      <div className="flex flex-col items-center mt-8">
-        
-        <img
-          src={mascot}
-          alt="Mascota AmistApp"
-          className="w-40 h-40 rounded-full shadow-xl border-4 border-white mb-4"
-        />
+          <div className="mt-4">
+            <strong>Puntos disponibles:</strong>
+            <p className="text-green-600 text-3xl font-extrabold">1000</p>
+          </div>
+        </section>
 
-        <p className="text-center text-xl font-semibold">
-          ¡No olvides motivar a tus estudiantes! 🌟  
-        </p>
-
-        <p className="text-center text-md text-purple-100 mt-1">
-          Entregar puntos positivos mejora la convivencia educativa.
-        </p>
-
+        {/* BOTÓN DAR PUNTAJE */}
         <button
-          onClick={() => window.location.href = "/teacher/rewards"}
-          className="mt-6 bg-yellow-400 text-gray-900 px-6 py-3 rounded-xl text-lg font-bold shadow-lg hover:bg-yellow-500 transition"
+          onClick={() => navigate("/teacher/give-points/students")}
+          className="w-full bg-purple-600 text-white py-4 rounded-2xl text-xl font-bold shadow-lg hover:bg-purple-700 transition"
         >
-          🎁 Dar puntaje ahora
+          🎁 Dar Puntaje
         </button>
 
-      </div>
+        {/* Atajos */}
+        <section className="grid grid-cols-2 gap-4">
+
+          {/* Estudiantes */}
+          <div
+            className="p-5 bg-purple-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-purple-200 transition"
+            onClick={() => navigate("/teacher/profile")}
+          >
+            <p className="text-purple-700 font-bold">Mis Estudiantes</p>
+          </div>
+
+          {/* Puntajes */}
+          <div
+            className="p-5 bg-blue-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-blue-200 transition"
+            onClick={() => navigate("/teacher/rewards")}
+          >
+            <p className="text-blue-700 font-bold">Puntajes</p>
+          </div>
+
+          {/* Emociones */}
+          <div
+            className="p-5 bg-green-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-green-200 transition"
+            onClick={() => navigate("/teacher/emotions")}
+          >
+            <p className="text-green-700 font-bold">Emociones</p>
+          </div>
+
+          {/* Reportes */}
+          <div
+            className="p-5 bg-yellow-100 rounded-2xl text-center shadow-md cursor-pointer hover:bg-yellow-200 transition"
+            onClick={() => navigate("/teacher/reports")}
+          >
+            <p className="text-yellow-700 font-bold">Reportes</p>
+          </div>
+
+        </section>
+
+      </main>
+
+      {/* Navegación inferior */}
+      <BottomNav />
     </div>
   );
 }

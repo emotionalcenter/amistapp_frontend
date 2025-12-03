@@ -1,40 +1,38 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-/* Páginas públicas */
 import UserSelect from "./pages/UserSelect";
 import TeacherLogin from "./pages/TeacherLoginPage";
 import TeacherRegister from "./pages/TeacherRegisterPage";
 import TeacherSuccess from "./pages/TeacherSuccess";
 
-/* Nuevo ProtectRoute */
 import ProtectedRoute from "./components/ProtectedRoute";
 
-/* Panel del profesor */
-import TeacherDashboard from "./pages/TeacherDashboard";  // 🔥 Nuevo Dashboard REAL
+import TeacherHome from "./pages/TeacherHome";
 import TeacherProfile from "./pages/TeacherProfile";
 import TeacherEmotions from "./pages/TeacherEmotions";
 import TeacherRewards from "./pages/TeacherRewards";
 import TeacherReports from "./pages/TeacherReports";
+
+import GivePointsStudents from "./pages/GivePointsStudents";
+import GivePointsActions from "./pages/GivePointsActions";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* Pantalla inicial */}
+        {/* PUBLIC ROUTES */}
         <Route path="/" element={<UserSelect />} />
-
-        {/* Autenticación */}
         <Route path="/login" element={<TeacherLogin />} />
         <Route path="/register/teacher" element={<TeacherRegister />} />
         <Route path="/teacher/success" element={<TeacherSuccess />} />
 
-        {/* Panel del profesor — TODAS protegidas */}
+        {/* PRIVATE ROUTES */}
         <Route
           path="/teacher/home"
           element={
             <ProtectedRoute>
-              <TeacherDashboard />
+              <TeacherHome />
             </ProtectedRoute>
           }
         />
@@ -71,6 +69,25 @@ export default function AppRouter() {
           element={
             <ProtectedRoute>
               <TeacherReports />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* GIVE POINTS FLOW */}
+        <Route
+          path="/teacher/give-points/students"
+          element={
+            <ProtectedRoute>
+              <GivePointsStudents />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher/give-points/actions"
+          element={
+            <ProtectedRoute>
+              <GivePointsActions />
             </ProtectedRoute>
           }
         />
