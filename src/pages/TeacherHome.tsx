@@ -12,7 +12,11 @@ export default function TeacherHome() {
   useEffect(() => {
     async function loadTeacher() {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) return;
+
+      if (!sessionData.session) {
+        navigate("/login");
+        return;
+      }
 
       const userId = sessionData.session.user.id;
 
@@ -22,12 +26,14 @@ export default function TeacherHome() {
         .eq("user_id", userId)
         .single();
 
-      if (!error && data) {
-        setTeacher(data);
-      } else {
-        console.warn("Profesor no encontrado en teachers_v2");
+      if (error || !data) {
+        console.log("⚠ No existe un profesor con user_id = ", userId);
+        setTeacher(null);
+        setLoading(false);
+        return;
       }
 
+      setTeacher(data);
       setLoading(false);
     }
 
@@ -39,27 +45,13 @@ export default function TeacherHome() {
   if (!teacher)
     return (
       <div className="p-6 text-white">
-        <p className="text-lg font-bold">
-          No se encontró el perfil del profesor.
-        </p>
-        <p className="mt-2">Por favor vuelve a iniciar sesión.</p>
-
-        <button
-          onClick={() => {
-            supabase.auth.signOut();
-            navigate("/login");
-          }}
-          className="mt-4 bg-red-600 px-4 py-2 rounded-lg text-white"
-        >
-          Cerrar sesión
-        </button>
+        <h1>No se encontró tu perfil de profesor</h1>
+        <p>Tu cuenta no está vinculada correctamente.</p>
       </div>
     );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-blue-500 pb-24">
-
-      {/* HEADER */}
       <header className="p-6 text-white">
         <h1 className="text-3xl font-bold">
           ¡Bienvenido, {teacher.full_name}! 👋
@@ -67,8 +59,6 @@ export default function TeacherHome() {
       </header>
 
       <main className="p-5 space-y-6">
-
-        {/* INFO PROFESOR */}
         <section className="bg-white shadow-xl p-6 rounded-2xl">
           <h2 className="text-xl font-bold text-purple-600">Tu información</h2>
 
@@ -97,60 +87,20 @@ export default function TeacherHome() {
           </div>
         </section>
 
-        {/* MASCOTA MOTIVACIONAL */}
         <section className="flex flex-col items-center">
           <img src={mascot} className="w-40 h-40 animate-bounce" />
           <p className="text-center text-white text-lg mt-3 font-semibold px-6">
             ¡Recuerda entregar puntos positivos hoy!
-            Cada reconocimiento mejora la convivencia educativa y motiva
-            a tus estudiantes a desarrollar habilidades socioemocionales. 💜
+            Cada reconocimiento mejora la convivencia educativa. 💜
           </p>
         </section>
 
-        {/* DAR PUNTAJE */}
         <button
           onClick={() => navigate("/teacher/give-points/students")}
           className="w-full bg-purple-700 text-white py-4 rounded-xl text-xl font-bold shadow-lg hover:bg-purple-800 transition"
         >
           🎁 Dar Puntaje
         </button>
-
-        {/* ATAJOS */}
-        <section className="grid grid-cols-2 gap-4">
-
-          {/* Mis Estudiantes */}
-          <div
-            className="p-4 bg-purple-100 rounded-xl text-center shadow-md cursor-pointer"
-            onClick={() => navigate("/teacher/students")}
-          >
-            <p className="text-purple-600 font-bold">Mis Estudiantes</p>
-          </div>
-
-          {/* Puntajes */}
-          <div
-            className="p-4 bg-blue-100 rounded-xl text-center shadow-md cursor-pointer"
-            onClick={() => navigate("/teacher/give-points/students")}
-          >
-            <p className="text-blue-600 font-bold">Puntajes</p>
-          </div>
-
-          {/* Emociones */}
-          <div
-            className="p-4 bg-green-100 rounded-xl text-center shadow-md cursor-pointer"
-            onClick={() => navigate("/teacher/emotions")}
-          >
-            <p className="text-green-600 font-bold">Emociones</p>
-          </div>
-
-          {/* Reportes */}
-          <div
-            className="p-4 bg-yellow-100 rounded-xl text-center shadow-md cursor-pointer"
-            onClick={() => navigate("/teacher/reports")}
-          >
-            <p className="text-yellow-600 font-bold">Reportes</p>
-          </div>
-        </section>
-
       </main>
 
       <BottomNav />
