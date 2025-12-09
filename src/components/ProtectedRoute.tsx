@@ -1,29 +1,20 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import { useNavigate } from "react-router-dom";
+// src/components/ProtectedRoute.tsx
+import { Navigate, useOutletContext } from "react-router-dom";
 
 export default function ProtectedRoute({ children }: any) {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
+  // Recuperamos el user que App.tsx proporciona
+  const { user } = useOutletContext<any>();
 
-  useEffect(() => {
-    async function verify() {
-      const { data } = await supabase.auth.getSession();
+  // Mientras espera a que authListener recupere sesión
+  if (user === undefined) {
+    return <p>Cargando sesión...</p>;
+  }
 
-      if (!data.session) {
-        navigate("/login");
-      } else {
-        setSession(data.session);
-        setLoading(false);
-      }
-    }
+  // Si NO hay usuario -> redirige
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
-    verify();
-  }, []);
-
-  if (loading) return <p>Cargando...</p>;
-
-  // Pasamos la sesión como prop interna
+  // Si hay usuario -> permite el acceso
   return children;
 }
