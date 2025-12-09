@@ -1,50 +1,54 @@
-// src/components/BottomNav.tsx
-import { useLocation, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import {
+  Home,
+  User,
+  Heart,
+  Gift,
+  Flag,
+} from "lucide-react";
 
-export default function BottomNav() {
-  const location = useLocation();
-  const navigate = useNavigate();
+interface Props {
+  active: string;
+  userType: "teacher" | "student";
+}
 
-  const path = location.pathname;
+export default function BottomNav({ active, userType }: Props) {
+  const base = userType === "teacher" ? "/teacher" : "/student";
 
-  const isTeacher = path.startsWith("/teacher");
-  const isStudent = path.startsWith("/student");
-
-  if (!isTeacher && !isStudent) return null;
-
-  const menu = isTeacher
-    ? [
-        { label: "Inicio", route: "/teacher/home" },
-        { label: "Emociones", route: "/teacher/emotions" },
-        { label: "Premios", route: "/teacher/rewards" },
-        { label: "Reportes", route: "/teacher/reports" },
-        { label: "Perfil", route: "/teacher/profile" },
-      ]
-    : [
-        { label: "Inicio", route: "/student/home" },
-        { label: "Emociones", route: "/student/emotions" },
-        { label: "Premios", route: "/student/rewards" },
-        { label: "Reportes", route: "/student/reports" },
-        { label: "Perfil", route: "/student/profile" },
-      ];
+  const items = [
+    { id: "home", label: "Inicio", icon: <Home size={22} />, to: `${base}/home` },
+    { id: "profile", label: "Perfil", icon: <User size={22} />, to: `${base}/profile` },
+    { id: "emotions", label: "Emociones", icon: <Heart size={24} />, to: `${base}/emotions`, center: true },
+    { id: "rewards", label: "Premios", icon: <Gift size={22} />, to: `${base}/rewards` },
+    { id: "reports", label: "Reportes", icon: <Flag size={22} />, to: `${base}/reports` },
+  ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-xl border-t py-2 flex justify-around z-50">
-      {menu.map((item) => {
-        const active = path === item.route;
+    <nav className="fixed bottom-0 left-0 w-full bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.08)] border-t z-50 py-2">
+      <div className="flex justify-around items-center">
 
-        return (
-          <button
-            key={item.route}
-            onClick={() => navigate(item.route)}
-            className={`flex flex-col items-center text-xs font-semibold ${
-              active ? "text-purple-600" : "text-gray-500"
-            }`}
+        {items.map((item) => (
+          <NavLink
+            key={item.id}
+            to={item.to}
+            className="flex flex-col items-center text-xs font-medium"
           >
-            {item.label}
-          </button>
-        );
-      })}
+            <div
+              className={`
+                flex items-center justify-center mb-1
+                ${item.center ? "bg-purple-600 text-white p-3 rounded-full shadow-md" : ""}
+                ${active === item.id && !item.center ? "text-purple-600" : "text-gray-500"}
+              `}
+            >
+              {item.icon}
+            </div>
+            <span className={`${active === item.id ? "text-purple-600" : "text-gray-500"}`}>
+              {item.label}
+            </span>
+          </NavLink>
+        ))}
+
+      </div>
     </nav>
   );
 }

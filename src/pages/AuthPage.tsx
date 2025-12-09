@@ -10,9 +10,6 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // -------------------------
-  // LOGIN EMAIL + PASSWORD
-  // -------------------------
   const handleLogin = async () => {
     setLoading(true);
     setError("");
@@ -29,30 +26,26 @@ export default function AuthPage() {
       return;
     }
 
-    // Redirección según metadata (si existe)
     const role = data.user?.user_metadata?.role;
 
     if (role === "teacher") {
-      navigate("/teacher/dashboard");
+      navigate("/teacher/home");
       return;
     }
 
     if (role === "student") {
-      navigate("/student/dashboard");
+      navigate("/student/home");
       return;
     }
 
-    navigate("/"); // fallback
+    navigate("/");
   };
 
-  // -------------------------
-  // LOGIN / REGISTRO CON GOOGLE
-  // -------------------------
   const handleGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + "/register/teacher/complete",
+        redirectTo: window.location.origin + "/auth/choice",
       },
     });
 
@@ -84,7 +77,6 @@ export default function AuthPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* BOTÓN LOGIN */}
         <button
           onClick={handleLogin}
           disabled={loading}
@@ -93,7 +85,6 @@ export default function AuthPage() {
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
 
-        {/* BOTÓN GOOGLE */}
         <button
           onClick={handleGoogle}
           className="w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition"
@@ -101,7 +92,6 @@ export default function AuthPage() {
           Ingresar con Google
         </button>
 
-        {/* LINK A REGISTRO */}
         <p className="text-center text-sm">
           ¿No tienes cuenta?{" "}
           <span

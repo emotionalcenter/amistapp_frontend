@@ -9,6 +9,9 @@ import TeacherSuccess from "./pages/TeacherSuccess";
 import StudentLogin from "./pages/StudentLogin";
 import StudentRegister from "./pages/StudentRegister";
 
+// GOOGLE / AUTH CALLBACK
+import AuthChoice from "./pages/AuthChoice";
+
 // PROTECTED ROUTE
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -20,7 +23,7 @@ import TeacherRewards from "./pages/TeacherRewards";
 import TeacherReports from "./pages/TeacherReports";
 import TeacherStudents from "./pages/TeacherStudents";
 
-// TEACHER GIVE POINTS FLOW (Acción → Estudiante)
+// TEACHER GIVE POINTS FLOW
 import GivePointsActions from "./pages/GivePointsActions";
 import GivePointsStudents from "./pages/GivePointsStudents";
 
@@ -31,9 +34,8 @@ import StudentEmotions from "./pages/StudentEmotions";
 import StudentRewards from "./pages/StudentRewards";
 import StudentReports from "./pages/StudentReports";
 
-// STUDENT GIVE POINTS FLOW (Acción → Estudiante)
+// STUDENT GIVE POINTS FLOW
 import StudentGivePoints from "./pages/StudentGivePoints";
-
 
 export default function AppRouter() {
   return (
@@ -49,9 +51,12 @@ export default function AppRouter() {
         <Route path="/register/teacher" element={<TeacherRegister />} />
         <Route path="/teacher/success" element={<TeacherSuccess />} />
 
-        {/* 🔥 LOGIN ESTUDIANTE */}
+        {/* LOGIN ESTUDIANTE */}
         <Route path="/login/student" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
+
+        {/* CALLBACK PARA GOOGLE AUTH */}
+        <Route path="/auth/choice" element={<AuthChoice />} />
 
 
         {/* ----------------------- */}
@@ -103,7 +108,6 @@ export default function AppRouter() {
           }
         />
 
-        {/* LISTA DE ESTUDIANTES */}
         <Route
           path="/teacher/students"
           element={
@@ -113,7 +117,7 @@ export default function AppRouter() {
           }
         />
 
-        {/* DAR PUNTOS PROFESOR – 1) Acción → 2) Estudiante */}
+        {/* DAR PUNTOS PROFESOR → ACCIÓN */}
         <Route
           path="/teacher/give-points/actions"
           element={
@@ -123,6 +127,7 @@ export default function AppRouter() {
           }
         />
 
+        {/* DAR PUNTOS PROFESOR → ESTUDIANTE */}
         <Route
           path="/teacher/give-points/students"
           element={
@@ -182,7 +187,7 @@ export default function AppRouter() {
           }
         />
 
-        {/* DAR PUNTOS ESTUDIANTE – 1) Acción → 2) Compañero */}
+        {/* DAR PUNTOS ESTUDIANTE */}
         <Route
           path="/student/give-points"
           element={
