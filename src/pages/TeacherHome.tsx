@@ -96,7 +96,7 @@ export default function TeacherHome() {
         </section>
 
         <button
-          onClick={() => navigate("/teacher/give-points/students")}
+          onClick={() => navigate("/teacher/give-points/actions")
           className="w-full bg-purple-700 text-white py-4 rounded-xl text-xl font-bold shadow-lg hover:bg-purple-800 transition"
         >
           🎁 Dar Puntaje
