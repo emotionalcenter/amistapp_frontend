@@ -27,7 +27,7 @@ export default function TeacherHome() {
         .single();
 
       if (error || !data) {
-        console.log("⚠ No existe un profesor con user_id = ", userId);
+        console.log("⚠ No existe un profesor con user_id =", userId);
         setTeacher(null);
         setLoading(false);
         return;
@@ -59,11 +59,16 @@ export default function TeacherHome() {
       </header>
 
       <main className="p-5 space-y-6">
+        {/* TARJETA DE INFORMACIÓN */}
         <section className="bg-white shadow-xl p-6 rounded-2xl">
           <h2 className="text-xl font-bold text-purple-600">Tu información</h2>
 
-          <p><strong>Asignatura:</strong> {teacher.subject}</p>
-          <p><strong>Curso:</strong> {teacher.course}</p>
+          <p>
+            <strong>Asignatura:</strong> {teacher.subject}
+          </p>
+          <p>
+            <strong>Curso:</strong> {teacher.course}
+          </p>
 
           <div className="mt-4">
             <strong>Código Profesor:</strong>
@@ -87,6 +92,7 @@ export default function TeacherHome() {
           </div>
         </section>
 
+        {/* MASCOTA MOTIVACIONAL */}
         <section className="flex flex-col items-center">
           <img src={mascot} className="w-40 h-40 animate-bounce" />
           <p className="text-center text-white text-lg mt-3 font-semibold px-6">
@@ -95,8 +101,9 @@ export default function TeacherHome() {
           </p>
         </section>
 
+        {/* BOTÓN DAR PUNTAJE */}
         <button
-          onClick={() => navigate("/teacher/give-points/actions")
+          onClick={() => navigate("/teacher/give-points/actions")}
           className="w-full bg-purple-700 text-white py-4 rounded-xl text-xl font-bold shadow-lg hover:bg-purple-800 transition"
         >
           🎁 Dar Puntaje
