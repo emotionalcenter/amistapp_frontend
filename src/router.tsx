@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+// CONTENEDOR PRINCIPAL (maneja sesión + outlet)
+import App from "./App";
+
 // PUBLIC PAGES
 import UserSelect from "./pages/UserSelect";
 import TeacherLogin from "./pages/TeacherLoginPage";
@@ -45,7 +48,6 @@ export default function AppRouter() {
         {/* ----------------------- */}
         {/*        PUBLIC ROUTES    */}
         {/* ----------------------- */}
-
         <Route path="/" element={<UserSelect />} />
         <Route path="/login" element={<TeacherLogin />} />
         <Route path="/register/teacher" element={<TeacherRegister />} />
@@ -60,143 +62,142 @@ export default function AppRouter() {
 
 
         {/* ----------------------- */}
-        {/*     TEACHER PRIVATE     */}
+        {/*     PRIVATE ROUTES      */}
+        {/*  El App envuelve TODAS   */}
         {/* ----------------------- */}
+        <Route element={<App />}>
 
-        <Route
-          path="/teacher/home"
-          element={
-            <ProtectedRoute>
-              <TeacherHome />
-            </ProtectedRoute>
-          }
-        />
+          {/* ---- TEACHER ---- */}
+          <Route
+            path="/teacher/home"
+            element={
+              <ProtectedRoute>
+                <TeacherHome />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/teacher/profile"
-          element={
-            <ProtectedRoute>
-              <TeacherProfile />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/teacher/profile"
+            element={
+              <ProtectedRoute>
+                <TeacherProfile />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/teacher/emotions"
-          element={
-            <ProtectedRoute>
-              <TeacherEmotions />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/teacher/emotions"
+            element={
+              <ProtectedRoute>
+                <TeacherEmotions />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/teacher/rewards"
-          element={
-            <ProtectedRoute>
-              <TeacherRewards />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/teacher/rewards"
+            element={
+              <ProtectedRoute>
+                <TeacherRewards />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/teacher/reports"
-          element={
-            <ProtectedRoute>
-              <TeacherReports />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/teacher/reports"
+            element={
+              <ProtectedRoute>
+                <TeacherReports />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/teacher/students"
-          element={
-            <ProtectedRoute>
-              <TeacherStudents />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/teacher/students"
+            element={
+              <ProtectedRoute>
+                <TeacherStudents />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* DAR PUNTOS PROFESOR → ACCIÓN */}
-        <Route
-          path="/teacher/give-points/actions"
-          element={
-            <ProtectedRoute>
-              <GivePointsActions />
-            </ProtectedRoute>
-          }
-        />
+          {/* DAR PUNTOS PROFESOR */}
+          <Route
+            path="/teacher/give-points/actions"
+            element={
+              <ProtectedRoute>
+                <GivePointsActions />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* DAR PUNTOS PROFESOR → ESTUDIANTE */}
-        <Route
-          path="/teacher/give-points/students"
-          element={
-            <ProtectedRoute>
-              <GivePointsStudents />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/teacher/give-points/students"
+            element={
+              <ProtectedRoute>
+                <GivePointsStudents />
+              </ProtectedRoute>
+            }
+          />
 
 
-        {/* ----------------------- */}
-        {/*     STUDENT PRIVATE     */}
-        {/* ----------------------- */}
+          {/* ---- STUDENT ---- */}
+          <Route
+            path="/student/home"
+            element={
+              <ProtectedRoute>
+                <StudentHome />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/student/home"
-          element={
-            <ProtectedRoute userType="student">
-              <StudentHome />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/student/profile"
+            element={
+              <ProtectedRoute>
+                <StudentProfile />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/student/profile"
-          element={
-            <ProtectedRoute userType="student">
-              <StudentProfile />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/student/emotions"
+            element={
+              <ProtectedRoute>
+                <StudentEmotions />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/student/emotions"
-          element={
-            <ProtectedRoute userType="student">
-              <StudentEmotions />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/student/rewards"
+            element={
+              <ProtectedRoute>
+                <StudentRewards />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/student/rewards"
-          element={
-            <ProtectedRoute userType="student">
-              <StudentRewards />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/student/reports"
+            element={
+              <ProtectedRoute>
+                <StudentReports />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/student/reports"
-          element={
-            <ProtectedRoute userType="student">
-              <StudentReports />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/student/give-points"
+            element={
+              <ProtectedRoute>
+                <StudentGivePoints />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* DAR PUNTOS ESTUDIANTE */}
-        <Route
-          path="/student/give-points"
-          element={
-            <ProtectedRoute userType="student">
-              <StudentGivePoints />
-            </ProtectedRoute>
-          }
-        />
-
+        </Route>
       </Routes>
     </BrowserRouter>
   );

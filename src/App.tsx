@@ -5,9 +5,9 @@ import BottomNav from "./components/BottomNav";
 import { initAuthListener } from "./supabase/authListener";
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  // EL CAMBIO IMPORTANTE ESTÁ AQUÍ
+  const [user, setUser] = useState<any>(undefined);
 
-  // Mantiene la sesión aunque vayas atrás o recargues
   useEffect(() => {
     initAuthListener(setUser);
   }, []);
@@ -15,7 +15,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="pt-20 pb-20">
-        {/* Le pasamos el usuario al resto del sistema */}
         <Outlet context={{ user }} />
       </main>
 
