@@ -11,15 +11,15 @@ export const initAuthListener = (setUser: any) => {
     setUser(data?.session?.user || null);
   });
 
-  // 2. Escuchar cualquier cambio de sesión (login, logout, refresh)
-  const { data: listener } = supabase.auth.onAuthStateChange(
-    (_event, session) => {
-      setUser(session?.user || null);
-    }
-  );
+  // 2. Escuchar cualquier cambio de sesión
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user || null);
+  });
 
-  // 3. Importante: devolver cleanup para React
+  // 3. Cleanup correcto
   return () => {
-    listener.subscription.unsubscribe();
+    subscription.unsubscribe();
   };
 };
