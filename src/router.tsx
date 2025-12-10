@@ -54,7 +54,7 @@ export default function AppRouter() {
         <Route path="/teacher/success" element={<TeacherSuccess />} />
 
         {/* LOGIN ESTUDIANTE */}
-        <Route path="/login/student" element={<StudentLogin />} />
+        <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
 
         {/* CALLBACK PARA GOOGLE AUTH */}
