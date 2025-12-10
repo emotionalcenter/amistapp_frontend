@@ -156,7 +156,7 @@ export default function UserSelect() {
 
         {/* ESTUDIANTE */}
         <Link
-          to="/auth/choice"
+          to="//student/login"
           state={{ role: "student" }}
           className="flex items-center gap-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl p-4 shadow-lg hover:shadow-xl transition mb-4"
         >

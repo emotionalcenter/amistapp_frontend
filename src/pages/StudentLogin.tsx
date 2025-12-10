@@ -4,30 +4,30 @@ import { useNavigate } from "react-router-dom";
 
 export default function StudentLogin() {
   const navigate = useNavigate();
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  async function handleLogin() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
     setLoading(true);
 
-    // 1. Verificar si el código existe en teachers_v2
-    const { data: teacher, error } = await supabase
-      .from("teachers_v2")
-      .select("id")
-      .eq("teacher_code", code.trim())
-      .single();
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (error || !teacher) {
-      alert("Código inválido. Pide a tu profesor que te comparta su código.");
+    if (loginError) {
+      setError("Correo o contraseña incorrectos.");
       setLoading(false);
       return;
     }
 
-    // 2. Crear sesión local del estudiante
-    localStorage.setItem("student_teacher_id", teacher.id);
-
-    // 3. Ir al registro de estudiante
-    navigate("/student/register");
+    // Ir al home del estudiante
+    navigate("/student/home");
   }
 
   return (
@@ -35,24 +35,48 @@ export default function StudentLogin() {
       <h1 className="text-3xl font-bold text-purple-700 mb-4">
         Ingreso Estudiante
       </h1>
-      <p className="text-gray-700 text-center mb-6">
-        Ingresa el código que te entregó tu profesor
-      </p>
 
-      <input
-        value={code}
-        onChange={(e) => setCode(e.target.value)}
-        className="w-full max-w-sm px-4 py-3 rounded-xl border text-lg"
-        placeholder="Código del profesor"
-      />
+      <form onSubmit={handleLogin} className="w-full max-w-sm space-y-3">
 
-      <button
-        onClick={handleLogin}
-        disabled={loading}
-        className="bg-purple-600 text-white px-8 py-3 w-full max-w-sm rounded-xl mt-4 text-lg font-semibold"
-      >
-        {loading ? "Verificando..." : "Ingresar"}
-      </button>
+        {error && (
+          <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        <input
+          className="w-full px-4 py-3 rounded-xl border"
+          placeholder="Correo electrónico"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <input
+          className="w-full px-4 py-3 rounded-xl border"
+          placeholder="Contraseña"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-purple-600 text-white px-8 py-3 w-full rounded-xl mt-2 text-lg font-semibold"
+        >
+          {loading ? "Ingresando..." : "Ingresar"}
+        </button>
+
+        <p
+          onClick={() => navigate("/student/register")}
+          className="text-sm text-purple-600 text-center underline cursor-pointer mt-2"
+        >
+          ¿No tienes cuenta? Registrarme
+        </p>
+      </form>
     </div>
   );
 }
