@@ -103,11 +103,19 @@ export default function TeacherHome() {
 
         {/* BOTÓN DAR PUNTAJE */}
         <button
-          onClick={() => navigate("/teacher/give-points/actions")}
+          onClick={() => navigate("/give-points/actions")}
           className="w-full bg-purple-700 text-white py-4 rounded-xl text-xl font-bold shadow-lg hover:bg-purple-800 transition"
         >
           🎁 Dar Puntaje
         </button>
+        
+        {/* BOTÓN VER ESTUDIANTES */}
+        <button
+          onClick={() => navigate("/teacher/students")}
+          className="w-full bg-white text-purple-700 py-3 rounded-xl text-lg font-bold shadow hover:bg-purple-100 transition"
+>
+  👩‍🎓 Ver estudiantes de mi clase
+</button>
       </main>
 
       <BottomNav />

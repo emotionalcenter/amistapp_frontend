@@ -2,168 +2,154 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import mascot from "../assets/mascot.png";
-import StudentBottomNav from "../components/StudentBottomNav";
+import logo from "../assets/logo.png";
 
-interface StudentRow {
-  id: string;
-  name: string;
-  email: string;
-  points: number;
-  teacher_id: string;
-}
+/* Avatares de animales (dicebear) */
+const animalAvatars = [
+  "lion",
+  "cat",
+  "dog",
+  "fox",
+  "panda",
+  "bear",
+  "koala",
+  "tiger",
+  "owl",
+  "rabbit",
+];
 
-interface TeacherRow {
-  id: string;
-  full_name: string | null;
-  subject: string | null;
-  course: string | null;
-  teacher_code: string;
-}
+/* Consejos socioemocionales */
+const consejos = [
+  "Reconocer a otros fortalece la empatía y el respeto 💜",
+  "Las acciones positivas inspiran a tus compañeros 🌱",
+  "Pedir ayuda también es una forma de valentía 🤝",
+  "Cuidar tus emociones te ayuda a aprender mejor ✨",
+  "Un pequeño gesto puede cambiar el día de alguien 😊",
+];
 
 export default function StudentHome() {
   const navigate = useNavigate();
-  const [student, setStudent] = useState<StudentRow | null>(null);
-  const [teacher, setTeacher] = useState<TeacherRow | null>(null);
+
+  const [student, setStudent] = useState<any>(null);
+  const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [consejo, setConsejo] = useState("");
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      setError("");
-
+    async function loadData() {
       const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
+      if (!sessionData.session) return;
 
-      if (!userId) {
-        navigate("/login");
-        return;
-      }
+      const userId = sessionData.session.user.id;
 
-      // 1. Buscar estudiante por user_id
-      const { data: stu, error: stuError } = await supabase
+      /* 1️⃣ Obtener estudiante */
+      const { data: studentData, error: studentError } = await supabase
         .from("students")
-        .select("id, name, email, points, teacher_id")
+        .select("*")
         .eq("user_id", userId)
         .single();
 
-      if (stuError || !stu) {
-        setError("No se encontró tu perfil de estudiante.");
+      if (studentError || !studentData) {
         setLoading(false);
         return;
       }
 
-      setStudent(stu as StudentRow);
+      setStudent(studentData);
 
-      // 2. Buscar profesor asociado
-      if (stu.teacher_id) {
-        const { data: tea } = await supabase
-          .from("teachers_v2")
-          .select("id, full_name, subject, course, teacher_code")
-          .eq("id", stu.teacher_id)
-          .single();
+      /* 2️⃣ Obtener profesor */
+      const { data: teacherData } = await supabase
+        .from("teachers_v2")
+        .select("name, teacher_code")
+        .eq("id", studentData.teacher_id)
+        .single();
 
-        if (tea) setTeacher(tea as TeacherRow);
-      }
-
+      setTeacher(teacherData || null);
       setLoading(false);
     }
 
-    load();
-  }, [navigate]);
+    loadData();
+    setConsejo(consejos[Math.floor(Math.random() * consejos.length)]);
+  }, []);
 
-  if (loading) {
+  if (loading) return <div className="p-6 text-gray-500">Cargando...</div>;
+
+  if (!student)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-white">
-        Cargando tu panel...
+      <div className="p-6 text-red-600 font-semibold">
+        No se encontró tu perfil de estudiante.
       </div>
     );
-  }
 
-  if (!student) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-600 text-sm">{error || "Error al cargar datos"}</p>
-      </div>
-    );
-  }
+  /* Avatar animal consistente por estudiante */
+  const avatarSeed =
+    animalAvatars[student.user_id.charCodeAt(0) % animalAvatars.length];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 to-blue-500 pb-24">
-      <header className="p-6 text-white">
-        <h1 className="text-2xl font-bold">
-          Hola, {student.name.split(" ")[0]} 👋
-        </h1>
-        <p className="text-sm opacity-90">
-          Este es tu espacio en AmistApp. ¡Construimos convivencia positiva juntos!
+    <div className="p-4 pb-28 space-y-6">
+
+      {/* LOGO */}
+      <div className="flex justify-center">
+        <img src={logo} alt="AmistApp" className="h-10" />
+      </div>
+
+      {/* HEADER */}
+      <div className="bg-white rounded-2xl shadow-lg p-5 flex items-center gap-4">
+        <img
+          src={`https://api.dicebear.com/9.x/fun-emoji/svg?seed=${avatarSeed}`}
+          className="w-16 h-16 rounded-full border-4 border-purple-300"
+          alt="Avatar"
+        />
+
+        <div>
+          <h2 className="text-xl font-bold text-purple-700">
+            Hola, {student.name} 👋
+          </h2>
+          <p className="text-gray-600 text-sm">
+            Colegio: {student.school_name}
+          </p>
+        </div>
+      </div>
+
+      {/* PUNTAJE */}
+      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-5 text-white shadow-lg">
+        <p className="text-sm opacity-90">Tu puntaje actual</p>
+        <p className="text-4xl font-extrabold">{student.points}</p>
+        <p className="text-xs opacity-90 mt-1">
+          Ganas puntos con acciones positivas 💜
         </p>
-      </header>
+      </div>
 
-      <main className="p-5 space-y-6">
-        {/* Tarjeta de puntos */}
-        <section className="bg-white rounded-2xl shadow-xl p-5">
-          <p className="text-sm text-gray-500">Tus puntos disponibles</p>
-          <p className="text-4xl font-extrabold text-green-600 mt-1">
-            {student.points}
+      {/* ACCIÓN PRINCIPAL */}
+      <button
+        onClick={() => navigate("/give-points/actions")}
+        className="w-full bg-purple-600 text-white py-4 rounded-xl text-lg font-bold shadow hover:bg-purple-700 transition"
+      >
+        ⭐ Reconocer a un compañero
+      </button>
+
+      {/* INFO CLASE */}
+      {teacher && (
+        <div className="bg-white rounded-2xl shadow p-4 text-sm space-y-1">
+          <p>
+            👨‍🏫 <b>Profesor:</b> {teacher.name}
           </p>
-          <p className="text-xs text-gray-500 mt-1">
-            Puedes usar estos puntos para premiar a compañeros y canjear premios.
+          <p>
+            🧩 <b>Código de la clase:</b>{" "}
+            <span className="font-mono text-purple-600">
+              {teacher.teacher_code}
+            </span>
           </p>
+        </div>
+      )}
 
-          {teacher && (
-            <div className="mt-4 border-t pt-3 text-sm text-gray-700">
-              <p>
-                <strong>Profesor/a:</strong>{" "}
-                {teacher.full_name || "Tu docente"}
-              </p>
-              <p>
-                <strong>Curso:</strong> {teacher.course || "-"}
-              </p>
-              <p>
-                <strong>Código del profesor:</strong>{" "}
-                <span className="font-mono text-purple-600 font-bold">
-                  {teacher.teacher_code}
-                </span>
-              </p>
-            </div>
-          )}
-        </section>
-
-        {/* Mascota motivando */}
-        <section className="flex flex-col items-center text-center text-white">
-          <img src={mascot} className="w-32 h-32 mb-2 animate-bounce" />
-          <p className="font-semibold">
-            Amis te recuerda: cada punto que entregas por una buena acción
-            hace tu curso más amable y respetuoso 💜
-          </p>
-        </section>
-
-        {/* Acciones principales */}
-        <section className="space-y-3">
-          <button
-            onClick={() => navigate("/student/give-points")}
-            className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2"
-          >
-            🎁 Dar puntaje a un compañero
-          </button>
-
-          <button
-            onClick={() => navigate("/student/emotions")}
-            className="w-full bg-white/90 text-purple-700 border border-purple-200 font-semibold py-3 rounded-xl shadow flex items-center justify-center gap-2"
-          >
-            💜 Registrar emoción del día
-          </button>
-
-          <button
-            onClick={() => navigate("/student/rewards")}
-            className="w-full bg-yellow-300/90 text-yellow-900 font-semibold py-3 rounded-xl shadow flex items-center justify-center gap-2"
-          >
-            🛍️ Ver y canjear premios
-          </button>
-        </section>
-      </main>
-
-      <StudentBottomNav active="home" />
+      {/* CONSEJO SOCIOEMOCIONAL */}
+      <div className="bg-purple-100 rounded-2xl p-5 flex items-center gap-4 shadow">
+        <img src={mascot} className="w-20 h-20" alt="Mascota" />
+        <div>
+          <p className="font-bold text-purple-700">Amis te recuerda 💜</p>
+          <p className="text-sm text-purple-800">{consejo}</p>
+        </div>
+      </div>
     </div>
   );
 }

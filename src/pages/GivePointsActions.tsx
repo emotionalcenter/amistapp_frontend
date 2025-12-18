@@ -30,7 +30,7 @@ export default function GivePointsActions() {
   }, []);
 
   function selectAction(action: ActionRow) {
-    navigate("/teacher/give-points/students", {
+    navigate("/give-points/students", {
       state: { selectedAction: action },
     });
   }

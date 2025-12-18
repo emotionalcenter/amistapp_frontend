@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import StudentSuccess from "./pages/StudentSuccess";
 
 // CONTENEDOR PRINCIPAL
 import App from "./App";
@@ -15,6 +16,9 @@ import StudentRegister from "./pages/StudentRegister";
 
 // GOOGLE CALLBACK
 import AuthChoice from "./pages/AuthChoice";
+
+// NOTIFICATIONS
+import Notifications from "./pages/Notifications";
 
 // PROTECTED ROUTE
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -34,6 +38,10 @@ import StudentEmotions from "./pages/StudentEmotions";
 import StudentRewards from "./pages/StudentRewards";
 import StudentReports from "./pages/StudentReports";
 
+// GIVE POINTS (COMPARTIDO)
+import GivePointsActions from "./pages/GivePointsActions";
+import GivePointsStudents from "./pages/GivePointsStudents";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -44,8 +52,9 @@ export default function AppRouter() {
         <Route path="/login" element={<TeacherLogin />} />
         <Route path="/register/teacher" element={<TeacherRegister />} />
         <Route path="/teacher/success" element={<TeacherSuccess />} />
+        <Route path="/student/success" element={<StudentSuccess />} />
 
-        {/* LOGIN ESTUDIANTE */}
+        {/* STUDENT AUTH */}
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
 
@@ -55,7 +64,17 @@ export default function AppRouter() {
         {/* PRIVATE ROUTES */}
         <Route element={<App />}>
 
-          {/* TEACHER PAGES */}
+          {/* 🔔 NOTIFICATIONS (COMPARTIDO) */}
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* TEACHER */}
           <Route path="/teacher/home" element={<ProtectedRoute><TeacherHome /></ProtectedRoute>} />
           <Route path="/teacher/profile" element={<ProtectedRoute><TeacherProfile /></ProtectedRoute>} />
           <Route path="/teacher/emotions" element={<ProtectedRoute><TeacherEmotions /></ProtectedRoute>} />
@@ -63,12 +82,16 @@ export default function AppRouter() {
           <Route path="/teacher/reports" element={<ProtectedRoute><TeacherReports /></ProtectedRoute>} />
           <Route path="/teacher/students" element={<ProtectedRoute><TeacherStudents /></ProtectedRoute>} />
 
-          {/* STUDENT PAGES */}
+          {/* STUDENT */}
           <Route path="/student/home" element={<ProtectedRoute><StudentHome /></ProtectedRoute>} />
           <Route path="/student/profile" element={<ProtectedRoute><StudentProfile /></ProtectedRoute>} />
           <Route path="/student/emotions" element={<ProtectedRoute><StudentEmotions /></ProtectedRoute>} />
           <Route path="/student/rewards" element={<ProtectedRoute><StudentRewards /></ProtectedRoute>} />
           <Route path="/student/reports" element={<ProtectedRoute><StudentReports /></ProtectedRoute>} />
+
+          {/* GIVE POINTS – COMPARTIDO */}
+          <Route path="/give-points/actions" element={<ProtectedRoute><GivePointsActions /></ProtectedRoute>} />
+          <Route path="/give-points/students" element={<ProtectedRoute><GivePointsStudents /></ProtectedRoute>} />
 
         </Route>
       </Routes>

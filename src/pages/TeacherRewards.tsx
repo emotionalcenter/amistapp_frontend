@@ -5,194 +5,171 @@ import BottomNav from "../components/BottomNav";
 interface RewardRow {
   id: string;
   title: string;
-  description: string | null;
   cost_points: number;
   stock: number;
+}
+
+interface ClaimRow {
+  id: string;
+  status: string;
+  points_spent: number;
+  student_name: string;
+  reward_title: string;
 }
 
 export default function TeacherRewards() {
   const [loading, setLoading] = useState(true);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [rewards, setRewards] = useState<RewardRow[]>([]);
+  const [claims, setClaims] = useState<ClaimRow[]>([]);
   const [form, setForm] = useState({
     title: "",
     cost_points: "",
     stock: "",
-    description: "",
   });
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      if (!userId) return;
-
-      const { data: teacher } = await supabase
-        .from("teachers_v2")
-        .select("id")
-        .eq("user_id", userId)
-        .single();
-
-      if (!teacher) {
-        setLoading(false);
-        return;
-      }
-
-      setTeacherId(teacher.id);
-
-      const { data: rewardsRows } = await supabase
-        .from("rewards_catalog")
-        .select("id, title, description, cost_points, stock")
-        .eq("teacher_id", teacher.id)
-        .order("created_at", { ascending: true });
-
-      setRewards(rewardsRows || []);
-      setLoading(false);
-    }
-
-    load();
+    loadAll();
   }, []);
 
-  function getStatus(reward: RewardRow): "disponible" | "pendiente" | "rechazado" | "entregado" {
-    if (reward.stock > 0) return "disponible";
-    return "pendiente"; // placeholder hasta conectar rewards_claims
-  }
+  async function loadAll() {
+    setLoading(true);
 
-  function getStatusClass(status: string) {
-    if (status === "disponible") return "bg-green-100 text-green-700";
-    if (status === "entregado") return "bg-blue-100 text-blue-700";
-    if (status === "pendiente") return "bg-yellow-100 text-yellow-700";
-    return "bg-red-100 text-red-700";
-  }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    if (!userId) return;
 
-  async function handleSaveReward() {
-    if (!teacherId) return;
-    if (!form.title || !form.cost_points || !form.stock) return;
-
-    setSaving(true);
-
-    const payload = {
-      teacher_id: teacherId,
-      title: form.title,
-      description: form.description || null,
-      cost_points: Number(form.cost_points),
-      stock: Number(form.stock),
-    };
-
-    const { data, error } = await supabase
-      .from("rewards_catalog")
-      .insert(payload)
-      .select("id, title, description, cost_points, stock")
+    const { data: teacher } = await supabase
+      .from("teachers_v2")
+      .select("id")
+      .eq("user_id", userId)
       .single();
 
-    if (!error && data) {
-      setRewards((prev) => [...prev, data]);
-      setForm({
-        title: "",
-        cost_points: "",
-        stock: "",
-        description: "",
-      });
-    }
+    if (!teacher) return;
 
-    setSaving(false);
+    setTeacherId(teacher.id);
+
+    const { data: rewardsRows } = await supabase
+      .from("rewards_catalog")
+      .select("id, title, cost_points, stock")
+      .eq("teacher_id", teacher.id)
+      .order("created_at");
+
+    setRewards(rewardsRows || []);
+
+    const { data: claimsRows } = await supabase
+      .from("rewards_claims")
+      .select(`
+        id,
+        status,
+        points_spent,
+        students(name),
+        rewards_catalog(title)
+      `)
+      .eq("teacher_id", teacher.id)
+      .order("created_at", { ascending: false });
+
+    setClaims(
+      (claimsRows || []).map((c: any) => ({
+        id: c.id,
+        status: c.status,
+        points_spent: c.points_spent,
+        student_name: c.students.name,
+        reward_title: c.rewards_catalog.title,
+      }))
+    );
+
+    setLoading(false);
   }
 
-  if (loading) {
-    return <p className="p-6">Cargando premios...</p>;
+  async function handleCreateReward() {
+    if (!teacherId) return;
+
+    await supabase.from("rewards_catalog").insert({
+      teacher_id: teacherId,
+      title: form.title,
+      cost_points: Number(form.cost_points),
+      stock: Number(form.stock),
+    });
+
+    setForm({ title: "", cost_points: "", stock: "" });
+    loadAll();
   }
+
+  async function updateClaim(id: string, status: "aprobado" | "rechazado") {
+    await supabase.rpc("teacher_update_reward_request", {
+      p_claim_id: id,
+      p_status: status,
+    });
+    loadAll();
+  }
+
+  async function deliver(id: string) {
+    await supabase.rpc("teacher_deliver_reward", {
+      p_claim_id: id,
+    });
+    loadAll();
+  }
+
+  if (loading) return <p className="p-6">Cargando...</p>;
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-6 pb-24 px-4">
-      <header className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Premios</h1>
-        <p className="text-sm text-gray-600">
-          Gestiona los premios y los canjes de tus estudiantes
-        </p>
-      </header>
+    <div className="min-h-screen bg-gray-50 pt-6 pb-24 px-4 space-y-6">
+      <h1 className="text-2xl font-bold text-purple-700">Premios</h1>
 
       {/* Crear premio */}
-      <section className="bg-white rounded-2xl shadow-md p-4 mb-4">
-        <h2 className="text-sm font-semibold text-gray-800 mb-2">
-          Crear nuevo premio
-        </h2>
-        <div className="space-y-2">
-          <input
-            className="w-full border rounded-lg px-3 py-2 text-xs"
-            placeholder="Nombre del premio"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2 text-xs"
-            placeholder="Puntos de canje"
-            type="number"
-            value={form.cost_points}
-            onChange={(e) => setForm({ ...form, cost_points: e.target.value })}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2 text-xs"
-            placeholder="Stock disponible"
-            type="number"
-            value={form.stock}
-            onChange={(e) => setForm({ ...form, stock: e.target.value })}
-          />
-          <input
-            className="w-full border rounded-lg px-3 py-2 text-xs"
-            placeholder="Características / detalles"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-          />
-          <button
-            onClick={handleSaveReward}
-            disabled={saving}
-            className="w-full bg-purple-600 text-white text-xs font-semibold py-2 rounded-lg disabled:opacity-60"
-          >
-            {saving ? "Guardando..." : "Guardar premio"}
-          </button>
-        </div>
+      <section className="bg-white rounded-xl p-4 shadow space-y-2">
+        <h2 className="font-semibold">Crear premio</h2>
+        <input
+          placeholder="Nombre"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+        />
+        <input
+          placeholder="Puntos"
+          type="number"
+          value={form.cost_points}
+          onChange={(e) => setForm({ ...form, cost_points: e.target.value })}
+        />
+        <input
+          placeholder="Stock"
+          type="number"
+          value={form.stock}
+          onChange={(e) => setForm({ ...form, stock: e.target.value })}
+        />
+        <button onClick={handleCreateReward}>Guardar</button>
       </section>
 
-      {/* Listado */}
+      {/* Solicitudes */}
       <section className="space-y-3">
-        {rewards.map((reward) => {
-          const status = getStatus(reward);
-          return (
-            <div
-              key={reward.id}
-              className="bg-white rounded-xl shadow-sm px-4 py-3 flex items-center justify-between"
-            >
-              <div>
-                <p className="font-semibold text-gray-900 text-sm">
-                  {reward.title}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {reward.cost_points} puntos · Stock: {reward.stock}
-                </p>
-                {reward.description && (
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    {reward.description}
-                  </p>
-                )}
-              </div>
-              <span
-                className={
-                  "text-[11px] font-semibold px-2 py-1 rounded-full " +
-                  getStatusClass(status)
-                }
-              >
-                {status}
-              </span>
-            </div>
-          );
-        })}
+        <h2 className="font-semibold">Solicitudes</h2>
 
-        {rewards.length === 0 && (
-          <p className="text-sm text-gray-600">
-            Aún no has creado premios para tus estudiantes.
-          </p>
-        )}
+        {claims.map((c) => (
+          <div key={c.id} className="bg-white p-4 rounded-xl shadow space-y-2">
+            <p className="font-semibold">
+              {c.student_name} → {c.reward_title}
+            </p>
+            <p className="text-sm">Puntos: {c.points_spent}</p>
+            <p className="text-xs">Estado: {c.status}</p>
+
+            {c.status === "pendiente" && (
+              <div className="flex gap-2">
+                <button onClick={() => updateClaim(c.id, "aprobado")}>
+                  Aprobar
+                </button>
+                <button onClick={() => updateClaim(c.id, "rechazado")}>
+                  Rechazar
+                </button>
+              </div>
+            )}
+
+            {c.status === "aprobado" && (
+              <button onClick={() => deliver(c.id)}>
+                Marcar como entregado
+              </button>
+            )}
+          </div>
+        ))}
       </section>
 
       <BottomNav active="rewards" />

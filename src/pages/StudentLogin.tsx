@@ -15,7 +15,7 @@ export default function StudentLogin() {
     setError("");
     setLoading(true);
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -26,8 +26,10 @@ export default function StudentLogin() {
       return;
     }
 
-    // Ir al home del estudiante
-    navigate("/student/home");
+    // Espera a que se configure la sesión global
+    setTimeout(() => {
+      navigate("/student/home");
+    }, 500);
   }
 
   return (
@@ -37,7 +39,6 @@ export default function StudentLogin() {
       </h1>
 
       <form onSubmit={handleLogin} className="w-full max-w-sm space-y-3">
-
         {error && (
           <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
             {error}

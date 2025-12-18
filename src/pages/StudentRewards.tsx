@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import mascot from "../assets/mascot.png";
 import StudentBottomNav from "../components/StudentBottomNav";
 
 interface StudentRow {
@@ -20,6 +21,7 @@ interface ClaimRow {
   id: string;
   reward_id: string;
   status: string;
+  points_spent: number;
 }
 
 export default function StudentRewards() {
@@ -30,109 +32,108 @@ export default function StudentRewards() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
+    loadAll();
+  }, []);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      if (!userId) return;
+  async function loadAll() {
+    setLoading(true);
 
-      const { data: stu } = await supabase
-        .from("students")
-        .select("id, points, teacher_id")
-        .eq("user_id", userId)
-        .single();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    if (!userId) return;
 
-      if (!stu) {
-        setLoading(false);
-        return;
-      }
+    const { data: stu } = await supabase
+      .from("students")
+      .select("id, points, teacher_id")
+      .eq("user_id", userId)
+      .single();
 
-      setStudent(stu);
-
-      // Catálogo de premios del profesor
-      const { data: rew } = await supabase
-        .from("rewards_catalog")
-        .select("id, title, description, cost_points, stock")
-        .eq("teacher_id", stu.teacher_id)
-        .order("cost_points", { ascending: true });
-
-      setRewards(rew || []);
-
-      // Historial de canjes
-      const { data: claimsRows } = await supabase
-        .from("rewards_claims")
-        .select("id, reward_id, status")
-        .eq("student_id", stu.id)
-        .order("created_at", { ascending: false });
-
-      setClaims(claimsRows || []);
+    if (!stu) {
       setLoading(false);
+      return;
     }
 
-    load();
-  }, []);
+    setStudent(stu);
+
+    const { data: rew } = await supabase
+      .from("rewards_catalog")
+      .select("id, title, description, cost_points, stock")
+      .eq("teacher_id", stu.teacher_id)
+      .order("cost_points", { ascending: true });
+
+    setRewards(rew || []);
+
+    const { data: claimsRows } = await supabase
+      .from("rewards_claims")
+      .select("id, reward_id, status, points_spent")
+      .eq("student_id", stu.id)
+      .order("created_at", { ascending: false });
+
+    setClaims(claimsRows || []);
+    setLoading(false);
+  }
 
   async function handleClaim(reward: RewardRow) {
     if (!student) return;
 
-    if (student.points < reward.cost_points) {
-      alert("No tienes suficientes puntos para este premio.");
+    const alreadyPending = claims.some(
+      (c) => c.reward_id === reward.id && c.status === "pendiente"
+    );
+
+    if (alreadyPending) {
+      alert("Ya tienes una solicitud pendiente para este premio.");
       return;
     }
 
     if (
       !confirm(
-        `¿Quieres canjear "${reward.title}" por ${reward.cost_points} puntos?`
+        `¿Solicitar "${reward.title}" por ${reward.cost_points} puntos?`
       )
-    ) {
+    )
       return;
-    }
 
     try {
       setSending(true);
 
-      // 1. Crear solicitud de canje
-      await supabase.from("rewards_claims").insert({
-        student_id: student.id,
-        reward_id: reward.id,
-        status: "pendiente",
+      await supabase.rpc("request_reward", {
+        p_reward_id: reward.id,
       });
 
-      // 2. Descontar puntos del estudiante
-      await supabase.rpc("increment_student_points", {
-        student_id_input: student.id,
-        points_input: -reward.cost_points,
-      });
-
-      // 3. Notificar al profesor (ajusta columnas según tu tabla)
-      await supabase.from("notifications").insert({
-        teacher_id: student.teacher_id,
-        student_id: student.id,
-        message: `Solicitud de canje: ${reward.title}`,
-      });
-
-      alert("Solicitud de canje enviada al profesor.");
+      await loadAll();
     } catch (err) {
       console.error(err);
-      alert("No se pudo realizar el canje.");
+      alert("No se pudo solicitar el premio.");
     } finally {
       setSending(false);
     }
   }
 
-  function statusColor(status: string) {
-    if (status === "entregado" || status === "aprobado")
-      return "bg-green-100 text-green-700";
-    if (status === "pendiente") return "bg-yellow-100 text-yellow-700";
-    return "bg-red-100 text-red-700";
+  async function handleCancel(claimId: string) {
+    if (!confirm("¿Cancelar esta solicitud?")) return;
+
+    try {
+      await supabase.rpc("cancel_reward_request", {
+        p_claim_id: claimId,
+      });
+
+      await loadAll();
+    } catch (err) {
+      console.error(err);
+      alert("No se pudo cancelar la solicitud.");
+    }
   }
 
-  const claimsByReward: Record<string, ClaimRow[]> = {};
-  claims.forEach((c) => {
-    if (!claimsByReward[c.reward_id]) claimsByReward[c.reward_id] = [];
-    claimsByReward[c.reward_id].push(c);
-  });
+  function statusColor(status: string) {
+    if (status === "entregado")
+      return "bg-green-100 text-green-700";
+    if (status === "aprobado")
+      return "bg-blue-100 text-blue-700";
+    if (status === "pendiente")
+      return "bg-yellow-100 text-yellow-700";
+    if (status === "cancelado")
+      return "bg-gray-200 text-gray-600";
+    return "bg-red-100 text-red-700";
+  }
 
   if (loading || !student) {
     return (
@@ -143,72 +144,72 @@ export default function StudentRewards() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-6 pb-24 px-4">
-      <header className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Premios</h1>
-        <p className="text-sm text-gray-600">
-          Puedes canjear tus puntos por estos premios acordados con tu profesor.
-        </p>
-        <p className="mt-1 text-sm">
-          Tus puntos actuales:{" "}
-          <span className="font-bold text-green-600">{student.points}</span>
-        </p>
-      </header>
-
-      <section className="space-y-3 mb-6">
-        {rewards.length === 0 && (
-          <p className="text-sm text-gray-500">
-            Tu profesor aún no ha creado premios.
+    <div className="min-h-screen bg-gray-50 pt-6 pb-24 px-4 space-y-5">
+      <div className="bg-white rounded-2xl shadow p-5 flex items-center gap-4">
+        <img src={mascot} className="w-16 h-16" />
+        <div>
+          <h1 className="text-xl font-bold text-purple-700">Premios 🎁</h1>
+          <p className="text-sm text-gray-600">
+            Solicita premios por tus acciones positivas.
           </p>
-        )}
+        </div>
+      </div>
 
-        {rewards.map((r) => (
-          <div
-            key={r.id}
-            className="bg-white rounded-xl shadow-sm px-4 py-3 flex flex-col gap-2"
-          >
+      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-4 text-white shadow">
+        <p className="text-sm">Tus puntos actuales</p>
+        <p className="text-3xl font-extrabold">{student.points}</p>
+      </div>
+
+      {rewards.map((r) => {
+        const claim = claims.find((c) => c.reward_id === r.id);
+
+        return (
+          <div key={r.id} className="bg-white rounded-2xl shadow p-4 space-y-2">
             <div className="flex justify-between items-center">
               <div>
-                <p className="font-semibold text-gray-900 text-sm">{r.title}</p>
+                <p className="font-semibold text-purple-700">{r.title}</p>
                 {r.description && (
-                  <p className="text-xs text-gray-500">{r.description}</p>
+                  <p className="text-sm text-gray-500">{r.description}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
-                  {r.cost_points} puntos
-                  {typeof r.stock === "number"
-                    ? ` · Stock: ${r.stock}`
-                    : ""}
+                <p className="text-xs text-gray-500">
+                  Costo: {r.cost_points} pts
                 </p>
               </div>
 
-              <button
-                disabled={sending}
-                onClick={() => handleClaim(r)}
-                className="px-3 py-2 text-xs rounded-lg bg-purple-600 text-white font-semibold disabled:bg-gray-300"
-              >
-                Canjear
-              </button>
+              {!claim && (
+                <button
+                  disabled={sending}
+                  onClick={() => handleClaim(r)}
+                  className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-semibold"
+                >
+                  Solicitar
+                </button>
+              )}
             </div>
 
-            {/* Historial de este premio */}
-            {claimsByReward[r.id] && claimsByReward[r.id].length > 0 && (
-              <div className="border-t pt-2 mt-1 space-y-1">
-                {claimsByReward[r.id].map((c) => (
-                  <div
-                    key={c.id}
-                    className={
-                      "inline-flex items-center gap-2 text-[11px] px-2 py-1 rounded-full " +
-                      statusColor(c.status)
-                    }
+            {claim && (
+              <div className="flex items-center justify-between">
+                <span
+                  className={`text-xs px-3 py-1 rounded-full ${statusColor(
+                    claim.status
+                  )}`}
+                >
+                  {claim.status.toUpperCase()}
+                </span>
+
+                {claim.status === "pendiente" && (
+                  <button
+                    onClick={() => handleCancel(claim.id)}
+                    className="text-xs text-red-600 underline"
                   >
-                    <span>Historial: {c.status.toUpperCase()}</span>
-                  </div>
-                ))}
+                    Cancelar
+                  </button>
+                )}
               </div>
             )}
           </div>
-        ))}
-      </section>
+        );
+      })}
 
       <StudentBottomNav active="rewards" />
     </div>
