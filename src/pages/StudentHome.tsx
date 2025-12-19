@@ -1,24 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import mascot from "../assets/mascot.png";
 import logo from "../assets/logo.png";
 
-/* Avatares de animales (dicebear) */
+/* Avatares de animales */
 const animalAvatars = [
-  "lion",
-  "cat",
-  "dog",
-  "fox",
-  "panda",
-  "bear",
-  "koala",
-  "tiger",
-  "owl",
-  "rabbit",
+  "lion","cat","dog","fox","panda","bear","koala","tiger","owl","rabbit",
 ];
 
-/* Consejos socioemocionales */
 const consejos = [
   "Reconocer a otros fortalece la empatía y el respeto 💜",
   "Las acciones positivas inspiran a tus compañeros 🌱",
@@ -35,40 +25,58 @@ export default function StudentHome() {
   const [loading, setLoading] = useState(true);
   const [consejo, setConsejo] = useState("");
 
-  useEffect(() => {
-    async function loadData() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) return;
+  const intervalRef = useRef<number | null>(null);
 
-      const userId = sessionData.session.user.id;
+  async function loadStudent() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) return;
 
-      /* 1️⃣ Obtener estudiante */
-      const { data: studentData, error: studentError } = await supabase
-        .from("students")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+    const userId = sessionData.session.user.id;
 
-      if (studentError || !studentData) {
-        setLoading(false);
-        return;
-      }
+    const { data: studentData } = await supabase
+      .from("students")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
 
-      setStudent(studentData);
-
-      /* 2️⃣ Obtener profesor */
-      const { data: teacherData } = await supabase
-        .from("teachers_v2")
-        .select("name, teacher_code")
-        .eq("id", studentData.teacher_id)
-        .single();
-
-      setTeacher(teacherData || null);
+    if (!studentData) {
       setLoading(false);
+      return;
     }
 
-    loadData();
+    setStudent(studentData);
+
+    const { data: teacherData } = await supabase
+      .from("teachers_v2")
+      .select("name, teacher_code")
+      .eq("id", studentData.teacher_id)
+      .single();
+
+    setTeacher(teacherData || null);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadStudent();
     setConsejo(consejos[Math.floor(Math.random() * consejos.length)]);
+
+    // 🔄 refrescar al volver a la pestaña
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadStudent();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    // 🔄 refresco automático cada 10s
+    intervalRef.current = window.setInterval(() => {
+      loadStudent();
+    }, 10000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+    };
   }, []);
 
   if (loading) return <div className="p-6 text-gray-500">Cargando...</div>;
@@ -80,13 +88,11 @@ export default function StudentHome() {
       </div>
     );
 
-  /* Avatar animal consistente por estudiante */
   const avatarSeed =
     animalAvatars[student.user_id.charCodeAt(0) % animalAvatars.length];
 
   return (
     <div className="p-4 pb-28 space-y-6">
-
       {/* LOGO */}
       <div className="flex justify-center">
         <img src={logo} alt="AmistApp" className="h-10" />
@@ -97,9 +103,7 @@ export default function StudentHome() {
         <img
           src={`https://api.dicebear.com/9.x/fun-emoji/svg?seed=${avatarSeed}`}
           className="w-16 h-16 rounded-full border-4 border-purple-300"
-          alt="Avatar"
         />
-
         <div>
           <h2 className="text-xl font-bold text-purple-700">
             Hola, {student.name} 👋
@@ -114,12 +118,16 @@ export default function StudentHome() {
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-5 text-white shadow-lg">
         <p className="text-sm opacity-90">Tu puntaje actual</p>
         <p className="text-4xl font-extrabold">{student.points}</p>
-        <p className="text-xs opacity-90 mt-1">
-          Ganas puntos con acciones positivas 💜
-        </p>
+
+        <button
+          className="mt-2 text-xs underline"
+          onClick={() => loadStudent()}
+        >
+          Actualizar
+        </button>
       </div>
 
-      {/* ACCIÓN PRINCIPAL */}
+      {/* ACCIÓN */}
       <button
         onClick={() => navigate("/give-points/actions")}
         className="w-full bg-purple-600 text-white py-4 rounded-xl text-lg font-bold shadow hover:bg-purple-700 transition"
@@ -130,11 +138,9 @@ export default function StudentHome() {
       {/* INFO CLASE */}
       {teacher && (
         <div className="bg-white rounded-2xl shadow p-4 text-sm space-y-1">
+          <p>👨‍🏫 <b>Profesor:</b> {teacher.name}</p>
           <p>
-            👨‍🏫 <b>Profesor:</b> {teacher.name}
-          </p>
-          <p>
-            🧩 <b>Código de la clase:</b>{" "}
+            🧩 <b>Código:</b>{" "}
             <span className="font-mono text-purple-600">
               {teacher.teacher_code}
             </span>
@@ -142,9 +148,9 @@ export default function StudentHome() {
         </div>
       )}
 
-      {/* CONSEJO SOCIOEMOCIONAL */}
+      {/* CONSEJO */}
       <div className="bg-purple-100 rounded-2xl p-5 flex items-center gap-4 shadow">
-        <img src={mascot} className="w-20 h-20" alt="Mascota" />
+        <img src={mascot} className="w-20 h-20" />
         <div>
           <p className="font-bold text-purple-700">Amis te recuerda 💜</p>
           <p className="text-sm text-purple-800">{consejo}</p>

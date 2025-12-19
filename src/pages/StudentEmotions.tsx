@@ -5,124 +5,111 @@ import StudentBottomNav from "../components/StudentBottomNav";
 
 const EMOTIONS = ["Feliz", "Triste", "Enojado/a", "Ansioso/a", "Agradecido/a"];
 
-interface StudentRow {
-  id: string;
-  teacher_id: string;
-  points: number;
+interface EmotionLog {
+  emotion: string;
+  created_at: string;
 }
 
 export default function StudentEmotions() {
-  const [student, setStudent] = useState<StudentRow | null>(null);
+  const [emotionToday, setEmotionToday] = useState<string | null>(null);
   const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [todayLogged, setTodayLogged] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
+  async function loadEmotions() {
+    setLoading(true);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      if (!userId) return;
-
-      const { data: stu } = await supabase
-        .from("students")
-        .select("id, teacher_id, points")
-        .eq("user_id", userId)
-        .single();
-
-      if (!stu) {
-        setLoading(false);
-        return;
-      }
-
-      setStudent(stu);
-
-      // Último registro de emociones
-      const { data: lastLogs } = await supabase
-        .from("emotions_log")
-        .select("*")
-        .eq("student_id", stu.id)
-        .order("logged_date", { ascending: false })
-        .limit(1);
-
-      if (lastLogs && lastLogs.length > 0) {
-        const last = lastLogs[0];
-        setStreak(last.streak_count || 0);
-
-        const todayStr = new Date().toISOString().slice(0, 10);
-        if (last.logged_date === todayStr) {
-          setTodayLogged(true);
-          setSelectedEmotion(last.emotion);
-        }
-      }
-
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    if (!userId) {
       setLoading(false);
+      return;
     }
 
-    load();
+    // Obtener estudiante
+    const { data: student } = await supabase
+      .from("students")
+      .select("id")
+      .eq("user_id", userId)
+      .single();
+
+    if (!student) {
+      setLoading(false);
+      return;
+    }
+
+    // Historial de emociones (últimos 30 días)
+    const { data: logs } = await supabase
+      .from("emotions_log")
+      .select("emotion, created_at")
+      .eq("student_id", student.id)
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    if (!logs || logs.length === 0) {
+      setStreak(0);
+      setEmotionToday(null);
+      setLoading(false);
+      return;
+    }
+
+    // ¿Ya registró hoy?
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const first = logs[0];
+    if (first.created_at.slice(0, 10) === todayStr) {
+      setEmotionToday(first.emotion);
+      setSelectedEmotion(first.emotion);
+    } else {
+      setEmotionToday(null);
+    }
+
+    // Calcular racha (días consecutivos)
+    let currentStreak = 0;
+    let expectedDate = new Date(todayStr);
+
+    for (const log of logs) {
+      const logDateStr = log.created_at.slice(0, 10);
+      const expectedStr = expectedDate.toISOString().slice(0, 10);
+
+      if (logDateStr === expectedStr) {
+        currentStreak++;
+        expectedDate.setDate(expectedDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    setStreak(currentStreak);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadEmotions();
   }, []);
 
   async function handleSave() {
-    if (!student || !selectedEmotion || todayLogged) return;
+    if (!selectedEmotion || emotionToday) return;
 
-    setSaving(true);
     try {
-      // Obtener último registro para calcular racha
-      const { data: lastLogs } = await supabase
-        .from("emotions_log")
-        .select("*")
-        .eq("student_id", student.id)
-        .order("logged_date", { ascending: false })
-        .limit(1);
+      setSaving(true);
 
-      let newStreak = 1;
-      const today = new Date();
-      const todayStr = today.toISOString().slice(0, 10);
-
-      if (lastLogs && lastLogs.length > 0) {
-        const last = lastLogs[0];
-        const lastDate = new Date(last.logged_date);
-        const diffDays =
-          (today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-
-        if (diffDays >= 1 && diffDays < 2) {
-          // Día siguiente
-          newStreak = (last.streak_count || 0) + 1;
-        } else {
-          newStreak = 1;
-        }
-      }
-
-      // Insertar registro
-      await supabase.from("emotions_log").insert({
-        teacher_id: student.teacher_id,
-        student_id: student.id,
-        emotion: selectedEmotion,
-        streak_count: newStreak,
-        logged_date: todayStr,
+      const { error } = await supabase.rpc("log_student_emotion", {
+        p_emotion: selectedEmotion,
+        p_note: null,
       });
 
-      // Si completó racha de 7 días, sumar 10 puntos
-      if (newStreak % 7 === 0) {
-        await supabase.rpc("increment_student_points", {
-          student_id_input: student.id,
-          points_input: 10,
-        });
-        alert(
-          "¡Felicitaciones! Completaste una racha de 7 días de registro emocional. Ganaste 10 puntos 🎉"
-        );
-      } else {
-        alert("Emoción registrada. ¡Gracias por compartir cómo te sientes! 💜");
+      if (error) {
+        console.error(error);
+        alert(error.message || "No se pudo registrar la emoción.");
+        return;
       }
 
-      setStreak(newStreak);
-      setTodayLogged(true);
+      alert("Emoción registrada 💜");
+      await loadEmotions();
     } catch (err) {
       console.error(err);
-      alert("No se pudo registrar tu emoción.");
+      alert("Ocurrió un error al registrar la emoción.");
     } finally {
       setSaving(false);
     }
@@ -131,7 +118,7 @@ export default function StudentEmotions() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        Cargando...
+        Cargando emociones...
       </div>
     );
   }
@@ -148,6 +135,7 @@ export default function StudentEmotions() {
         </div>
       </header>
 
+      {/* Racha */}
       <section className="bg-white rounded-2xl shadow-md p-4 mb-4">
         <p className="text-sm text-gray-700">
           Racha actual de registro emocional:
@@ -157,13 +145,14 @@ export default function StudentEmotions() {
           <span className="text-base font-normal text-gray-500">días</span>
         </p>
         <p className="text-xs text-gray-500 mt-1">
-          Cada 7 días seguidos de registro ganas 10 puntos extra.
+          Registrar emociones ayuda a conocerte mejor 💜
         </p>
       </section>
 
+      {/* Selector */}
       <section className="space-y-3">
         <p className="text-sm text-gray-700">
-          ¿Cómo te sientes hoy? Elige una emoción:
+          ¿Cómo te sientes hoy?
         </p>
 
         <div className="grid grid-cols-2 gap-3">
@@ -172,7 +161,7 @@ export default function StudentEmotions() {
             return (
               <button
                 key={emo}
-                disabled={todayLogged}
+                disabled={!!emotionToday}
                 onClick={() => setSelectedEmotion(emo)}
                 className={
                   "py-3 rounded-xl text-sm font-semibold shadow " +
@@ -188,11 +177,11 @@ export default function StudentEmotions() {
         </div>
 
         <button
-          disabled={!selectedEmotion || todayLogged || saving}
+          disabled={!selectedEmotion || !!emotionToday || saving}
           onClick={handleSave}
           className="w-full mt-4 bg-purple-600 disabled:bg-gray-300 disabled:text-gray-500 text-white py-3 rounded-xl font-semibold shadow"
         >
-          {todayLogged
+          {emotionToday
             ? "Ya registraste tu emoción hoy"
             : saving
             ? "Guardando..."

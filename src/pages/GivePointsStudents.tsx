@@ -8,6 +8,7 @@ export default function GivePointsStudents() {
   const selectedAction = location.state?.selectedAction;
 
   const [students, setStudents] = useState<any[]>([]);
+  const [teacherId, setTeacherId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
 
@@ -18,55 +19,86 @@ export default function GivePointsStudents() {
     }
 
     async function load() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
+      setLoading(true);
 
-      const { data: teacher } = await supabase
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
+
+      if (sessionErr || !sessionData.session) {
+        navigate("/login");
+        return;
+      }
+
+      const userId = sessionData.session.user.id;
+
+      const { data: teacher, error: teacherErr } = await supabase
         .from("teachers_v2")
         .select("id")
         .eq("user_id", userId)
         .single();
 
-      if (!teacher) return;
+      if (teacherErr || !teacher) {
+        alert("No se encontró tu perfil de profesor.");
+        setLoading(false);
+        return;
+      }
 
-      const { data: studentsRows } = await supabase
+      setTeacherId(teacher.id);
+
+      const { data: studentsRows, error: studentsErr } = await supabase
         .from("students")
         .select("id, name, email")
         .eq("teacher_id", teacher.id)
-        .order("name");
+        .order("name", { ascending: true });
+
+      if (studentsErr) {
+        console.error(studentsErr);
+        alert("No se pudieron cargar los estudiantes.");
+      }
 
       setStudents(studentsRows || []);
       setLoading(false);
     }
 
     load();
-  }, []);
+  }, [navigate, selectedAction]);
 
   async function givePoints(student: any) {
-    if (!selectedAction) return;
+    if (!selectedAction || !teacherId) return;
 
-    if (
-      !confirm(
-        `¿Premiar a ${student.name} con ${selectedAction.points} puntos por "${selectedAction.name}"?`
-      )
-    )
+    const pts = Number(selectedAction.points || 0);
+    if (!Number.isFinite(pts) || pts <= 0) {
+      alert("La acción seleccionada tiene puntaje inválido.");
       return;
+    }
+
+    const ok = confirm(
+      `¿Premiar a ${student.name} con ${pts} puntos por "${selectedAction.name}"?`
+    );
+    if (!ok) return;
 
     try {
       setSending(true);
 
-      // 🔑 UNA SOLA LLAMADA
-      await supabase.rpc("give_points_to_student", {
+      const { error } = await supabase.rpc("give_points_to_student", {
         p_student_id: student.id,
-        p_points: selectedAction.points,
-        p_reason: selectedAction.name,
+        p_points: pts,
+        p_reason: String(selectedAction.name || "Reconocimiento"),
       });
 
+      if (error) {
+        console.error(error);
+        alert(error.message || "Error al entregar puntaje");
+        return;
+      }
+
       alert("¡Puntaje entregado correctamente! 💜");
-      navigate("/teacher/home");
+
+      // Volvemos al home. TeacherHome se refresca solo.
+      navigate("/teacher/home", { replace: true });
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Error al entregar puntaje");
+      alert(err?.message || "Error inesperado al entregar puntaje");
     } finally {
       setSending(false);
     }
@@ -89,6 +121,12 @@ export default function GivePointsStudents() {
         </span>{" "}
         (+{selectedAction.points} puntos)
       </p>
+
+      {students.length === 0 && (
+        <p className="text-gray-600">
+          No tienes estudiantes registrados con tu código.
+        </p>
+      )}
 
       {students.map((student) => (
         <div

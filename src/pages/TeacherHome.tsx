@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import BottomNav from "../components/BottomNav";
 import mascot from "../assets/mascot.png";
@@ -9,43 +9,64 @@ export default function TeacherHome() {
   const [loading, setLoading] = useState(true);
   const [teacher, setTeacher] = useState<any>(null);
 
-  useEffect(() => {
-    async function loadTeacher() {
-      const { data: sessionData } = await supabase.auth.getSession();
+  const intervalRef = useRef<number | null>(null);
 
-      if (!sessionData.session) {
-        navigate("/login");
-        return;
-      }
+  async function loadTeacher() {
+    const { data: sessionData } = await supabase.auth.getSession();
 
-      const userId = sessionData.session.user.id;
-
-      const { data, error } = await supabase
-        .from("teachers_v2")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (error || !data) {
-        console.log("⚠ No existe un profesor con user_id =", userId);
-        setTeacher(null);
-        setLoading(false);
-        return;
-      }
-
-      setTeacher(data);
-      setLoading(false);
+    if (!sessionData.session) {
+      navigate("/login");
+      return;
     }
 
+    const userId = sessionData.session.user.id;
+
+    const { data, error } = await supabase
+      .from("teachers_v2")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !data) {
+      console.log("⚠ No existe un profesor con user_id =", userId, error);
+      setTeacher(null);
+      setLoading(false);
+      return;
+    }
+
+    setTeacher(data);
+    setLoading(false);
+  }
+
+  useEffect(() => {
     loadTeacher();
+
+    // 1) refresca al volver a la pestaña
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadTeacher();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    // 2) refresca cada 10 segundos (simple y confiable)
+    intervalRef.current = window.setInterval(() => {
+      loadTeacher();
+    }, 10000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) return <p className="p-6 text-white">Cargando datos...</p>;
 
   if (!teacher)
     return (
-      <div className="p-6 text-white">
-        <h1>No se encontró tu perfil de profesor</h1>
+      <div className="p-6">
+        <h1 className="text-xl font-bold">No se encontró tu perfil de profesor</h1>
         <p>Tu cuenta no está vinculada correctamente.</p>
       </div>
     );
@@ -53,13 +74,10 @@ export default function TeacherHome() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500 to-blue-500 pb-24">
       <header className="p-6 text-white">
-        <h1 className="text-3xl font-bold">
-          ¡Bienvenido, {teacher.full_name}! 👋
-        </h1>
+        <h1 className="text-3xl font-bold">¡Bienvenido, {teacher.full_name}! 👋</h1>
       </header>
 
       <main className="p-5 space-y-6">
-        {/* TARJETA DE INFORMACIÓN */}
         <section className="bg-white shadow-xl p-6 rounded-2xl">
           <h2 className="text-xl font-bold text-purple-600">Tu información</h2>
 
@@ -89,10 +107,16 @@ export default function TeacherHome() {
             <p className="text-green-600 text-3xl font-extrabold">
               {teacher.points_available}
             </p>
+
+            <button
+              className="mt-2 text-xs underline text-purple-700"
+              onClick={() => loadTeacher()}
+            >
+              Actualizar ahora
+            </button>
           </div>
         </section>
 
-        {/* MASCOTA MOTIVACIONAL */}
         <section className="flex flex-col items-center">
           <img src={mascot} className="w-40 h-40 animate-bounce" />
           <p className="text-center text-white text-lg mt-3 font-semibold px-6">
@@ -101,21 +125,19 @@ export default function TeacherHome() {
           </p>
         </section>
 
-        {/* BOTÓN DAR PUNTAJE */}
         <button
           onClick={() => navigate("/give-points/actions")}
           className="w-full bg-purple-700 text-white py-4 rounded-xl text-xl font-bold shadow-lg hover:bg-purple-800 transition"
         >
           🎁 Dar Puntaje
         </button>
-        
-        {/* BOTÓN VER ESTUDIANTES */}
+
         <button
           onClick={() => navigate("/teacher/students")}
           className="w-full bg-white text-purple-700 py-3 rounded-xl text-lg font-bold shadow hover:bg-purple-100 transition"
->
-  👩‍🎓 Ver estudiantes de mi clase
-</button>
+        >
+          👩‍🎓 Ver estudiantes de mi clase
+        </button>
       </main>
 
       <BottomNav />
