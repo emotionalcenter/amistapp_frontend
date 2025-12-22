@@ -9,7 +9,8 @@ interface Student {
 
 interface EmotionLog {
   student_id: string;
-  created_at: string;
+  logged_date: string;      // YYYY-MM-DD
+  streak_count: number;
 }
 
 interface StudentEmotionStatus {
@@ -64,12 +65,12 @@ export default function TeacherEmotions() {
 
     const studentIds = studentList.map((s) => s.id);
 
-    // 4️⃣ Historial de emociones (últimos 30 días)
+    // 4️⃣ Últimos registros emocionales
     const { data: logs } = await supabase
       .from("emotions_log")
-      .select("student_id, created_at")
+      .select("student_id, logged_date, streak_count")
       .in("student_id", studentIds)
-      .order("created_at", { ascending: false })
+      .order("logged_date", { ascending: false })
       .limit(200);
 
     const emotions: EmotionLog[] = logs || [];
@@ -90,31 +91,13 @@ export default function TeacherEmotions() {
         };
       }
 
-      // ¿Registró hoy?
-      const completedToday =
-        logsOfStudent[0].created_at.slice(0, 10) === todayStr;
-
-      // Calcular racha
-      let streak = 0;
-      let expectedDate = new Date(todayStr);
-
-      for (const log of logsOfStudent) {
-        const logDate = log.created_at.slice(0, 10);
-        const expectedStr = expectedDate.toISOString().slice(0, 10);
-
-        if (logDate === expectedStr) {
-          streak++;
-          expectedDate.setDate(expectedDate.getDate() - 1);
-        } else {
-          break;
-        }
-      }
+      const lastLog = logsOfStudent[0];
 
       return {
         id: student.id,
         name: student.name,
-        streak,
-        completedToday,
+        streak: lastLog.streak_count ?? 0,
+        completedToday: lastLog.logged_date === todayStr,
       };
     });
 
