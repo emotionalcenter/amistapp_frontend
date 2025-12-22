@@ -12,6 +12,7 @@ interface ReportRow {
   id: string;
   description: string;
   status: string;
+  response_message: string | null;
   created_at: string;
 }
 
@@ -26,43 +27,46 @@ export default function StudentReports() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      if (!userId) return;
-
-      const { data: stu } = await supabase
-        .from("students")
-        .select("id, teacher_id")
-        .eq("user_id", userId)
-        .single();
-
-      if (!stu) {
-        setLoading(false);
-        return;
-      }
-
-      setStudent(stu);
-
-      const { data: reps } = await supabase
-        .from("reports")
-        .select("id, description, status, created_at")
-        .eq("student_id", stu.id)
-        .order("created_at", { ascending: false });
-
-      setReports(reps || []);
-      setLoading(false);
-    }
-
-    load();
+    loadAll();
   }, []);
 
-  function statusColor(status: string) {
-    if (status === "visto" || status === "resuelto")
+  async function loadAll() {
+    setLoading(true);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    if (!userId) return;
+
+    const { data: stu } = await supabase
+      .from("students")
+      .select("id, teacher_id")
+      .eq("user_id", userId)
+      .single();
+
+    if (!stu) {
+      setLoading(false);
+      return;
+    }
+
+    setStudent(stu);
+
+    const { data: reps } = await supabase
+      .from("reports")
+      .select(
+        "id, description, status, response_message, created_at"
+      )
+      .eq("student_id", stu.id)
+      .order("created_at", { ascending: false });
+
+    setReports(reps || []);
+    setLoading(false);
+  }
+
+  function statusStyle(status: string) {
+    if (status === "respondido")
       return "bg-green-100 text-green-700";
-    if (status === "pendiente") return "bg-yellow-100 text-yellow-700";
+    if (status === "pendiente")
+      return "bg-yellow-100 text-yellow-700";
     return "bg-red-100 text-red-700";
   }
 
@@ -71,41 +75,33 @@ export default function StudentReports() {
     if (!student) return;
 
     if (!place || !description || !expectation) {
-      alert("Completa todos los campos del formulario.");
+      alert("Completa todos los campos antes de enviar.");
       return;
     }
 
     try {
       setSending(true);
 
-      const fullDescription = `Lugar: ${place}\nDescripción: ${description}\nLo que espero que pase: ${expectation}\nAnonimo: ${
-        anonymous ? "sí" : "no"
-      }`;
+      const fullDescription = `Lugar: ${place}
+Descripción: ${description}
+Lo que espero que pase: ${expectation}
+Anónimo: ${anonymous ? "Sí" : "No"}`;
 
       await supabase.from("reports").insert({
         teacher_id: student.teacher_id,
         student_id: student.id,
-        report_type: "reporte estudiante",
         description: fullDescription,
         status: "pendiente",
       });
 
-      alert(
-        "Tu reporte fue enviado al docente. Gracias por confiar en AmistApp 💜"
-      );
+      alert("Tu reporte fue enviado al profesor 💜");
 
       setPlace("");
       setDescription("");
       setExpectation("");
+      setAnonymous(false);
 
-      // Recargar historial
-      const { data: reps } = await supabase
-        .from("reports")
-        .select("id, description, status, created_at")
-        .eq("student_id", student.id)
-        .order("created_at", { ascending: false });
-
-      setReports(reps || []);
+      loadAll();
     } catch (err) {
       console.error(err);
       alert("No se pudo enviar el reporte.");
@@ -124,17 +120,20 @@ export default function StudentReports() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-6 pb-24 px-4 space-y-4">
-      <header className="flex gap-3 items-center">
+      {/* HEADER */}
+      <header className="flex items-center gap-3">
         <img src={mascot} className="w-12 h-12" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reportes</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Reportes
+          </h1>
           <p className="text-sm text-gray-600">
-            Amis te ayuda a pedir apoyo cuando algo no se siente justo o seguro.
+            Amis te ayuda a pedir apoyo cuando lo necesitas 💜
           </p>
         </div>
       </header>
 
-      {/* Formulario */}
+      {/* FORMULARIO */}
       <section className="bg-white rounded-2xl shadow-md p-4 space-y-3">
         <h2 className="text-sm font-semibold text-gray-800">
           Crear un nuevo reporte
@@ -146,47 +145,41 @@ export default function StudentReports() {
               type="checkbox"
               checked={anonymous}
               onChange={(e) => setAnonymous(e.target.checked)}
-              className="w-4 h-4"
             />
-            Quiero que mi reporte sea anónimo para mis compañeros.
+            Quiero que sea anónimo para mis compañeros
           </label>
 
           <input
             value={place}
             onChange={(e) => setPlace(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm"
-            placeholder="Lugar donde ocurrió (ej. patio, sala, comedor)"
+            className="w-full border rounded-xl px-3 py-2 text-sm"
+            placeholder="¿Dónde ocurrió?"
           />
 
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm min-h-[70px]"
+            className="w-full border rounded-xl px-3 py-2 text-sm min-h-[70px]"
             placeholder="Describe qué pasó"
           />
 
           <textarea
             value={expectation}
             onChange={(e) => setExpectation(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm min-h-[70px]"
-            placeholder="¿Qué esperas que pase después de este reporte?"
+            className="w-full border rounded-xl px-3 py-2 text-sm min-h-[70px]"
+            placeholder="¿Qué esperas que pase?"
           />
 
           <button
             disabled={sending}
-            className="w-full bg-purple-600 text-white text-sm font-semibold py-2 rounded-lg"
+            className="w-full bg-purple-600 text-white py-2 rounded-xl text-sm font-semibold"
           >
             {sending ? "Enviando..." : "Enviar reporte"}
           </button>
         </form>
-
-        <p className="text-[11px] text-gray-500 mt-2">
-          Amis te recuerda: pedir ayuda es una forma de cuidar tu bienestar y el
-          de tus compañeros 💜
-        </p>
       </section>
 
-      {/* Historial */}
+      {/* HISTORIAL */}
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-gray-800">
           Historial de mis reportes
@@ -201,24 +194,35 @@ export default function StudentReports() {
         {reports.map((r) => (
           <div
             key={r.id}
-            className="bg-white rounded-xl shadow-sm px-4 py-3 flex flex-col gap-1"
+            className="bg-white rounded-xl shadow-sm p-4 space-y-2"
           >
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500">
                 {new Date(r.created_at).toLocaleString()}
               </span>
               <span
-                className={
-                  "text-[11px] font-semibold px-2 py-1 rounded-full " +
-                  statusColor(r.status)
-                }
+                className={`text-[11px] font-semibold px-2 py-1 rounded-full ${statusStyle(
+                  r.status
+                )}`}
               >
                 {r.status.toUpperCase()}
               </span>
             </div>
-            <p className="text-xs text-gray-700 whitespace-pre-line">
+
+            <pre className="text-xs text-gray-700 whitespace-pre-wrap">
               {r.description}
-            </p>
+            </pre>
+
+            {r.response_message && (
+              <div className="bg-purple-50 rounded-xl p-3 text-sm">
+                <p className="font-semibold text-purple-700">
+                  Respuesta del profesor:
+                </p>
+                <p className="text-purple-800">
+                  {r.response_message}
+                </p>
+              </div>
+            )}
           </div>
         ))}
       </section>
